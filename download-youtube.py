@@ -161,6 +161,25 @@ def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
     ]
     print(f"Merging audio and video using {command[0]}")
     subprocess.run(command, check=True)
+
+def find_episode_and_season(title:str, series_id:int):
+    # https://developer.themoviedb.org/reference/search-tv
+    # https://developer.themoviedb.org/reference/tv-season-details
+
+    num_seasons = 3
+    for season in range(1, num_seasons+1):
+        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
+        headers = {
+                    "accept": "application/json",
+                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkMzMxMzlkYjFlZDIwY2RlMzU4OTU2YzY4MmJiMzUwNiIsIm5iZiI6MTU5OTQ4NjMyNS41NzUsInN1YiI6IjVmNTYzOTc1ODRmMjQ5MDAzOGZiOWFlZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.YYVGwAspFRhcL9L_wWjTEIwbQS2quiC6WyHIB7pD9IE"
+                }
+        response = requests.get(url, headers=headers)
+        for episode in response.json()['episodes']:
+            if episode['name'].lower() in title.lower():
+                print(f"Found {episode['name']} as episode {episode['episode_number']} and season {season} in TMDB.")
+                return episode['episode_number'], episode['season_number']
+    return None, None
+
 def main():
     # argument parsing
     parser = argparse.ArgumentParser(description="Download movie(s) from YouTube movie/playlist url.", formatter_class=argparse.RawTextHelpFormatter)
