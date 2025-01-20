@@ -4,6 +4,7 @@ from pathlib import Path
 from pydub import AudioSegment
 from pytubefix import YouTube, Playlist, Stream
 import re
+import requests
 import shutil
 import subprocess
 
