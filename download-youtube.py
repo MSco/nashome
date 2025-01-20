@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
+import json
 from pathlib import Path
 from pydub import AudioSegment
-from pytubefix import YouTube, Playlist, Stream, StreamQuery
+from pytubefix import YouTube, Playlist, Channel, Stream, StreamQuery
 import re
 import requests
 import shutil
@@ -48,11 +49,27 @@ LANGUAGES:list[Language] = [
     Language(['swahili'], ['sw', 'swa']),
 ]
 
-def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool):
+PLAYLISTS_FILENAME = "playlists.json"
+
+def download_channel(channel_url:str, outdir:str|Path, language:str, audio_only:bool, playlists_dict:dict[str, int]):
+    print("Downloading channel")
+    channel = Channel(channel_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
+    for playlist in channel.playlists:
+        download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, audio_only=audio_only, playlists_dict=playlists_dict)
+
+def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool, playlists_dict:dict[str, int]):
     print("Downloading playlist")
     playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
-    for video in playlist.videos:
+
+    num_downloaded = playlists_dict[playlist.title] if playlist.title in playlists_dict else 0
+    if num_downloaded == len(playlist.videos):
+        print(f"Playlist {playlist.title} already downloaded.")
+        return
+
+    for video in playlist.videos[num_downloaded:len(playlist.videos)]:
         download_stream(yt=video, outdir=outdir, language=language, audio_only=audio_only)
+
+    playlists_dict[playlist.title] = len(playlist.videos)
 
 def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bool):
     # differentiate between url and YouTube object
@@ -196,6 +213,16 @@ def find_episode_and_season(title:str, series_id:int):
                 return episode['episode_number'], episode['season_number']
     return None, None
 
+def read_playlists_dict(outdir:Path|str) -> dict[str, int]:
+    playlists_path = Path(outdir) / PLAYLISTS_FILENAME
+    if not playlists_path.exists():
+        return dict()
+    return json.load(open(playlists_path, 'r'))
+
+def write_playlists_dict(outdir:Path|str, playlists:dict[str, int]):
+    playlists_path = Path(outdir) / PLAYLISTS_FILENAME
+    json.dump(playlists, open(playlists_path, 'w'))
+
 def main():
     # argument parsing
     parser = argparse.ArgumentParser(description="Download movie(s) from YouTube movie/playlist url.", formatter_class=argparse.RawTextHelpFormatter)
@@ -205,11 +232,18 @@ def main():
     parser.add_argument('-l', "--language", type=str, help="If specified, the video will be re-dubbed with an extra audio stream in given language, if available (default: German).")
     
     args = parser.parse_args()
+
+    playlists_dict = read_playlists_dict(args.outdir)
     for url in args.urls:
-        if "playlist" in url:
-            download_playlist(playlist_url=url, outdir=args.outdir, language=args.language, audio_only=args.audio_only)
+        if "@" in url:
+            download_channel(channel_url=url, outdir=args.outdir, language=args.language, audio_only=args.audio_only, playlists_dict=playlists_dict)
+        elif "playlist" in url:
+            download_playlist(playlist_url=url, outdir=args.outdir, language=args.language, audio_only=args.audio_only, playlists_dict=playlists_dict)
         else:
             download_stream(yt=url, outdir=args.outdir, language=args.language, audio_only=args.audio_only)
+
+    if playlists_dict:
+        write_playlists_dict(args.outdir, playlists_dict)
 
 if __name__ == "__main__":
     main()
