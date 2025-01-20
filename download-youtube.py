@@ -2,7 +2,7 @@
 import argparse
 from pathlib import Path
 from pydub import AudioSegment
-from pytubefix import YouTube, Playlist, Stream
+from pytubefix import YouTube, Playlist, Stream, StreamQuery
 import re
 import requests
 import shutil
@@ -59,9 +59,35 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     if isinstance(yt, str):
         yt = YouTube(yt, 'WEB', use_oauth=True, allow_oauth_cache=True)
 
+    # define output file name
+    output_filename = generate_filename(yt=yt, audio_only=audio_only)
+
+    # create output directory if not exists
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    # progress output
     print(f"Downloading {"audio" if audio_only else "video"} {yt.title}")
 
-    # define output file name
+    if audio_only:
+        download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
+        return True
+
+    if outdir/output_filename in outdir.iterdir():
+        print(f"File {output_filename} already exists.")
+        return False
+
+    # check if extra audio tracks are available
+    audio_tracks = yt.streams.get_extra_audio_track()
+
+    if audio_tracks:
+        download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, language=language)
+    else:
+        # Download video
+        yt.streams.order_by("resolution").last().download(output_path=str(outdir), filename=output_filename)
+
+    return True
+
+def generate_filename(yt:YouTube, audio_only:bool):
     dict_regex = {
         'Pokemon': re.compile(r'.*FULL EPISODE (\d+) \| Season (\d+)'),
     }
@@ -80,75 +106,62 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     else:
         output_filename = f'{yt.title}.{suffix}'
 
-    if audio_only:
-        temporary_directory = Path(outdir) / 'tmp' 
-        yt.streams.get_audio_only().download(output_path=str(temporary_directory), filename=output_filename)
-        audio = AudioSegment.from_file(str(temporary_directory/output_filename), format="m4a")
-        audio.export((outdir/output_filename).with_suffix('.mp3'), format="mp3")
-        shutil.rmtree(temporary_directory)
-        return True
+    return output_filename
 
-    # create output directory if not exists
-    outdir.mkdir(parents=True, exist_ok=True)
 
-    if outdir/output_filename in outdir.iterdir():
-        print(f"File {output_filename} already exists.")
+def download_audio(yt:str|YouTube, outdir:str|Path, outfilename:str):
+    temporary_directory = Path(outdir) / 'tmp' 
+    yt.streams.get_audio_only().download(output_path=str(temporary_directory), filename=outfilename)
+    audio = AudioSegment.from_file(str(temporary_directory/outfilename), format="m4a")
+    audio.export((outdir/outfilename).with_suffix('.mp3'), format="mp3")
+    shutil.rmtree(temporary_directory)
+
+def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio_tracks:StreamQuery, language:str):
+    # define temporary directory
+    temporary_directory = Path(outdir) / 'tmp' 
+
+    # define language name if not specified
+    if language:
+        if language in LANGUAGES:
+            language:Language = LANGUAGES[LANGUAGES.index(language)]
+        else:
+            print(f"Language {language} not found. Available languages are: {LANGUAGES}")
+            return False
+    else:
+        language = LANGUAGES[0] # default: German
+
+    # Download audio track
+    audio_track_list = [yt.streams.get_default_audio_track(), audio_tracks.order_by('abr').desc()]
+    for audio_track_listelement in audio_track_list:
+        for stream in audio_track_listelement:
+            stream:Stream
+            if any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short):
+                stream.download(output_path=str(temporary_directory))
+                break
+        else:
+            continue
+        break
+    else:
+        print("Specified audio track found.")
         return False
 
-    # check if extra audio tracks are available
-    audio_tracks = yt.streams.get_extra_audio_track()
+    # Download video
+    yt.streams.order_by("resolution").filter(mime_type="video/mp4").last().download(output_path=str(temporary_directory))
 
-    if audio_tracks:
-        # define temporary directory
-        temporary_directory = Path(outdir) / 'tmp' 
+    # Find audio and video file
+    audio_file, video_file = None, None
+    for file in temporary_directory.iterdir():
+        if file.suffix == '.m4a':
+            audio_file = file
+        elif file.suffix == '.mp4':
+            video_file = file
 
-        # define language name if not specified
-        if language:
-            if language in LANGUAGES:
-                language:Language = LANGUAGES[LANGUAGES.index(language)]
-            else:
-                print(f"Language {language} not found. Available languages are: {LANGUAGES}")
-                return False
-        else:
-            language = LANGUAGES[0] # default: German
+    # Merge audio and video
+    if audio_file and video_file:
+        merge_audio_and_video(video_file, audio_file, outdir / outfilename)
 
-        # Download audio track
-        audio_track_list = [yt.streams.get_default_audio_track(), audio_tracks.order_by('abr').desc()]
-        for audio_track_listelement in audio_track_list:
-            for stream in audio_track_listelement:
-                stream:Stream
-                if any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short):
-                    stream.download(output_path=str(temporary_directory))
-                    break
-            else:
-                continue
-            break
-        else:
-            print("Specified audio track found.")
-            return False
-
-        # Download video
-        yt.streams.order_by("resolution").filter(mime_type="video/mp4").last().download(output_path=str(temporary_directory))
-
-        # Find audio and video file
-        audio_file, video_file = None, None
-        for file in temporary_directory.iterdir():
-            if file.suffix == '.m4a':
-                audio_file = file
-            elif file.suffix == '.mp4':
-                video_file = file
-
-        # Merge audio and video
-        if audio_file and video_file:
-            merge_audio_and_video(video_file, audio_file, outdir / output_filename)
-
-        # Clean up
-        shutil.rmtree(temporary_directory)
-    else:
-        # Download video
-        yt.streams.order_by("resolution").last().download(output_path=str(outdir), filename=output_filename)
-
-    return True
+    # Clean up
+    shutil.rmtree(temporary_directory)
 
 def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
     command = [
