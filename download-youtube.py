@@ -50,14 +50,14 @@ LANGUAGES:list[Language] = [
 
 def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool):
     print("Downloading playlist")
-    playlist = Playlist(playlist_url, 'WEB')
+    playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
     for video in playlist.videos:
         download_stream(yt=video, outdir=outdir, language=language, audio_only=audio_only)
 
 def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bool):
     # differentiate between url and YouTube object
     if isinstance(yt, str):
-        yt = YouTube(yt, 'WEB')
+        yt = YouTube(yt, 'WEB', use_oauth=True, allow_oauth_cache=True)
 
     print(f"Downloading {"audio" if audio_only else "video"} {yt.title}")
 
