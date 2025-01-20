@@ -71,9 +71,12 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
         regex = dict_regex[title_name]
         match_episode = regex.match(yt.title)
         if match_episode is not None:
-            episode, season = map(int, match_episode.groups())
-            output_filename = f'{title_name} - s{season:02d}e{episode:03d}.{suffix}'
-            break
+            if title_name == 'Pokemon':
+                episode, season = find_episode_and_season(title=yt.title, series_id=60572)
+                if not episode or not season:
+                    episode, season = map(int, match_episode.groups())
+                output_filename = f'{title_name} - s{season:02d}e{episode:03d}.{suffix}'
+                break
     else:
         output_filename = f'{yt.title}.{suffix}'
 
