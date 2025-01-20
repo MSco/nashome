@@ -110,13 +110,18 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
             language = LANGUAGES[0] # default: German
 
         # Download audio track
-        for stream in audio_tracks.order_by('abr').desc():
-            stream:Stream
-            if any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short):
-                stream.download(output_path=str(temporary_directory))
-                break
+        audio_track_list = [yt.streams.get_default_audio_track(), audio_tracks.order_by('abr').desc()]
+        for audio_track_listelement in audio_track_list:
+            for stream in audio_track_listelement:
+                stream:Stream
+                if any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short):
+                    stream.download(output_path=str(temporary_directory))
+                    break
+            else:
+                continue
+            break
         else:
-            print("No German audio track found.")
+            print("Specified audio track found.")
             return False
 
         # Download video
