@@ -137,20 +137,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
 
         # Merge audio and video
         if audio_file and video_file:
-
-            command = [
-                'ffmpeg',
-                '-i', video_file,
-                '-i', audio_file,
-                '-c:v', 'copy',  # Copy the video stream without re-encoding
-                '-strict', 'experimental',  # Allow experimental codecs if needed
-                '-map', '0:v:0',  # Select the first video stream from the first input
-                '-map', '1:a:0',  # Select the first audio stream from the second input
-                '-loglevel', 'error',  # Suppress output
-                outdir / output_filename
-            ]
-            print(f"Merging audio and video using {command[0]}")
-            subprocess.run(command, check=True)
+            merge_audio_and_video(video_file, audio_file, outdir / output_filename)
 
         # Clean up
         shutil.rmtree(temporary_directory)
@@ -160,6 +147,20 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
 
     return True
 
+def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
+    command = [
+        'ffmpeg',
+        '-i', video_file,
+        '-i', audio_file,
+        '-c:v', 'copy',  # Copy the video stream without re-encoding
+        '-strict', 'experimental',  # Allow experimental codecs if needed
+        '-map', '0:v:0',  # Select the first video stream from the first input
+        '-map', '1:a:0',  # Select the first audio stream from the second input
+        '-loglevel', 'error',  # Suppress output
+        outpath
+    ]
+    print(f"Merging audio and video using {command[0]}")
+    subprocess.run(command, check=True)
 def main():
     # argument parsing
     parser = argparse.ArgumentParser(description="Download movie(s) from YouTube movie/playlist url.", formatter_class=argparse.RawTextHelpFormatter)
