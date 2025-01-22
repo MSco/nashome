@@ -1,1 +1,1 @@
-tmdb_token = "asdfghj"
+tmdb_api_token = "asdfghj"

@@ -7,7 +7,7 @@ import shutil
 import subprocess
 from unidecode import unidecode
 
-from nashome.config.config import tmdb_token
+from nashome.config.config import tmdb_api_token
 from nashome.youtube.constants import LANGUAGES, PLAYLISTS_FILENAME
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
@@ -181,7 +181,7 @@ def find_episode_and_season(title:str, series_id:int):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
         headers = {
                     "accept": "application/json",
-                    "Authorization": f"Bearer {tmdb_token}"
+                    "Authorization": f"Bearer {tmdb_api_token}"
                 }
         response = requests.get(url, headers=headers)
         for episode in response.json()['episodes']:
