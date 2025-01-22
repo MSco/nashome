@@ -1,0 +1,56 @@
+[project]
+name = "nashome"
+description = "Python Library providing several utilities for the NASHOME project."
+authors = [{ name = "Martin Schober", email = "mschober611@gmail.com"}]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.8"
+dynamic = ["version", "dependencies"]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[build-system]
+requires = ["setuptools", "wheel", "setuptools-git-versioning>=1.13.1,<2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+tag_filter = "v(?P<tag>.*)"
+template = "{tag}-{timestamp:%Y-%m-%d}+{sha}+{branch}.{ccount}"
+dev_template = "{tag}-{timestamp:%Y-%m-%d}+{sha}+{branch}.dev{ccount}"
+dirty_template = "{tag}-{timestamp:%Y-%m-%d}+{sha}+{branch}.dirty{ccount}"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["nashome*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project.scripts]
+cleanup-recordings = "nashome._cmd.cleanup_recordings:main"
+create-movie = "nashome._cmd.create_movie:main"
+download-youtube = "nashome._cmd.download_youtube:main"
+join-images = "nashome._cmd.join_images:main"
+
+[project.urls]
+homepage = "https://github.com/MSco/nashome"
+documentation = "https://github.com/MSco/nashome"
+repository = "https://github.com/MSco/nashome.git"
+tracker = "https://github.com/MSco/nashome/issues"
+source = "https://github.com/MSco/nashome"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.pylint.format]
+max-module-lines = 100
+
+[tool.black]
+line-length = 100
