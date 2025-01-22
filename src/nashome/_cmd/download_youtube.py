@@ -9,6 +9,8 @@ import shutil
 import subprocess
 from unidecode import unidecode
 
+from nashome.config.config import tmdb_token
+
 class Language():
     def __init__(self, long:list[str], short:list[str]):
         self.long = list(map(str.lower, long))
@@ -209,7 +211,7 @@ def find_episode_and_season(title:str, series_id:int):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
         headers = {
                     "accept": "application/json",
-                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkMzMxMzlkYjFlZDIwY2RlMzU4OTU2YzY4MmJiMzUwNiIsIm5iZiI6MTU5OTQ4NjMyNS41NzUsInN1YiI6IjVmNTYzOTc1ODRmMjQ5MDAzOGZiOWFlZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.YYVGwAspFRhcL9L_wWjTEIwbQS2quiC6WyHIB7pD9IE"
+                    "Authorization": f"Bearer {tmdb_token}"
                 }
         response = requests.get(url, headers=headers)
         for episode in response.json()['episodes']:
