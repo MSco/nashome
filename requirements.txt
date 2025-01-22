@@ -1,3 +1,4 @@
-pytubefix
 pydub
+pytubefix
+requests
 unidecode
