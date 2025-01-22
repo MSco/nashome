@@ -1,3 +1,3 @@
 data/photos
-**/tmdb_token
+**/config.py
 outdir

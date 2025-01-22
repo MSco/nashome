@@ -28,9 +28,6 @@ dirty_template = "{tag}-{timestamp:%Y-%m-%d}+{sha}+{branch}.dirty{ccount}"
 where = ["src"]
 include = ["nashome*"]
 
-[tool.setuptools.package-data]
-nashome = ["data/tmdb_token"]
-
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
