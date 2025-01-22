@@ -127,10 +127,15 @@ def generate_filename(yt:YouTube, audio_only:bool):
 
 
 def download_audio(yt:str|YouTube, outdir:str|Path, outfilename:str):
+    # define output directory
     temporary_directory = Path(outdir) / 'tmp' 
+
+    # Download audio and convert to mp3
     yt.streams.get_audio_only().download(output_path=str(temporary_directory), filename=outfilename)
     audio = AudioSegment.from_file(str(temporary_directory/outfilename), format="m4a")
     audio.export((outdir/outfilename).with_suffix('.mp3'), format="mp3")
+
+    # Clean up
     shutil.rmtree(temporary_directory)
 
 def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio_tracks:StreamQuery, language:str):
@@ -181,6 +186,7 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
     shutil.rmtree(temporary_directory)
 
 def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
+    # define ffmpeg command
     command = [
         'ffmpeg',
         '-i', video_file,
@@ -192,6 +198,8 @@ def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
         '-loglevel', 'error',  # Suppress output
         outpath
     ]
+
+    # run ffmpeg command
     print(f"Merging audio and video using {command[0]}")
     subprocess.run(command, check=True)
 
