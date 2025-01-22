@@ -2,7 +2,7 @@
 import argparse
 from pathlib import Path
 
-from nashome.youtube.pytube_handler import download_youtube
+from nashome.youtube.youtube_handler import download_youtube
 
 def main():
     # argument parsing
