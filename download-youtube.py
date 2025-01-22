@@ -199,7 +199,7 @@ def find_episode_and_season(title:str, series_id:int):
     # https://developer.themoviedb.org/reference/search-tv
     # https://developer.themoviedb.org/reference/tv-season-details
 
-    num_seasons = 3
+    num_seasons = 25
     for season in range(1, num_seasons+1):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
         headers = {
