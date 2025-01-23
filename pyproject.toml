@@ -35,6 +35,7 @@ dependencies = { file = ["requirements.txt"] }
 cleanup-recordings = "nashome._cmd.cleanup_recordings:main"
 create-movie = "nashome._cmd.create_movie:main"
 download-youtube = "nashome._cmd.download_youtube:main"
+fix-photos = "nashome._cmd.fix_photos:main"
 join-images = "nashome._cmd.join_images:main"
 
 [project.urls]
