@@ -1,3 +1,4 @@
+piexif
 pydub
 pytubefix
 requests
