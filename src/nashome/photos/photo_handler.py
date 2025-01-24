@@ -8,7 +8,7 @@ Das Datum und gegebenenfalls die Uhrzeit heraus.
 '''
 from datetime import datetime
 from pathlib import Path
-import piexif
+import exif
 import re
 import subprocess
 
@@ -41,15 +41,13 @@ def insert_exif_datetime(image_path:str|Path, date:datetime):
     datetime_str = f"{date.year}:{date.month}:{date.day} {date.hour}:{date.minute}:{date.second}"
 
     # create exif data
-    exif_dict = {'Exif': {
-                     piexif.ExifIFD.DateTimeOriginal: datetime_str,
-                     piexif.ExifIFD.DateTimeDigitized: datetime_str
-                }}
-    exif_bytes = piexif.dump(exif_dict)
+    img = exif.Image(image_path)
+    img["DateTimeOriginal"] = img["DateTimeDigitized"] = img["DateTime"] = datetime_str
 
     # insert exif data into image
     print(f"Inserting EXIF data {datetime_str} into {image_path}")
-    piexif.insert(exif_bytes, str(image_path))
+    with open('data/photos/IMG_20241021_140354.jpg', 'wb') as new_image_file:
+        new_image_file.write(img.get_file())
 
 # path = '/volume1/photo/'
 # path = '/localdata/src/python/nashome/photos'
