@@ -16,7 +16,7 @@ def extract_datetime_from_filename(filename:str) -> tuple[datetime,str]:
     patterns = [
         r'IMG(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(.*)\.jpe?g',  # IMGYYYYMMDDHHMMSS.jpg
         r'Screenshot_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})(.*)\.jpe?g',  # Screenshot_YYYY-MM-DD-HH-MM-SS_<hashcode>.jpg
-        r'IMG-(\d{4})(\d{2})(\d{2})(-WA\d+.*)\.jpe?g',  # IMG-YYYYMMDD-WAXXXX.jpg
+        r'IMG-(\d{4})(\d{2})(\d{2})(-|_WA\d+.*)\.jpe?g',  # IMG-YYYYMMDD-WAXXXX.jpg
         r'(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})(.*)\.jpe?g'  # YYYYMMDD_HHMMSS.jpg
     ]
     
