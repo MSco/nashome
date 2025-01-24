@@ -46,7 +46,7 @@ def insert_exif_datetime(image_path:str|Path, date:datetime):
 
     # insert exif data into image
     print(f"Inserting EXIF data {datetime_str} into {image_path}")
-    with open('data/photos/IMG_20241021_140354.jpg', 'wb') as new_image_file:
+    with open(str(image_path), 'wb') as new_image_file:
         new_image_file.write(img.get_file())
 
 # path = '/volume1/photo/'
