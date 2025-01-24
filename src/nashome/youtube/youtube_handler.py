@@ -185,7 +185,9 @@ def find_episode_and_season(title:str, series_id:int):
                 }
         response = requests.get(url, headers=headers)
         for episode in response.json()['episodes']:
-            if unidecode(episode['name']).lower() in unidecode(title).lower():
+            tmdb_episode_name = unidecode(episode['name']).lower()
+            title = unidecode(title).lower()
+            if tmdb_episode_name in title or any([part in tmdb_episode_name for part in map(str.strip,title.split("|"))]):
                 print(f"Found {episode['name']} as episode {episode['episode_number']} and season {season} in TMDB.")
                 return episode['episode_number'], episode['season_number']
     return None, None
