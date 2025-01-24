@@ -38,7 +38,7 @@ def extract_datetime_from_filename(filename:str) -> tuple[datetime,str]:
 
 def insert_exif_datetime(image_path:str|Path, date:datetime):
     # create datetime string
-    datetime_str = f"{date.year}:{date.month}:{date.day} {date.hour}:{date.minute}:{date.second}"
+    datetime_str = f"{date.year:04d}:{date.month:02d}:{date.day:02d} {date.hour:02d}:{date.minute:02d}:{date.second:02d}"
 
     # create exif data
     img = exif.Image(image_path)
