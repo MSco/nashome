@@ -62,12 +62,15 @@ def fix_photos(path:str|Path, disable_synology:bool):
             if date is None:
                 continue
 
+            # Fügt das Datum und die Uhrzeit als Meta-Daten in die Bild-Datei ein
+            insert_exif_datetime(old_path, date)
+
             # Benennt die Dateien um
             new_path = root/new_filename
+            if new_path.exists():
+                print(f"File {new_path} already exists")
+                continue
             old_path.rename(new_path)
-            
-            # Fügt das Datum und die Uhrzeit als Meta-Daten in die Bild-Datei ein
-            insert_exif_datetime(new_path, date)
             
             # Füge neue Dateienamen in den Index ein und lösche die alten aus dem Index
             if not disable_synology:
