@@ -76,7 +76,7 @@ def fix_photos(path:str|Path, disable_synology:bool):
             
             # Füge neue Dateienamen in den Index ein und lösche die alten aus dem Index
             if not disable_synology:
-                subprocess.call(["synoindex", "-a", new_path])
                 subprocess.call(["synoindex", "-d", old_path])
+                subprocess.call(["synoindex", "-a", new_path])
             
             print('Done!\n')      
