@@ -53,6 +53,8 @@ def insert_exif_datetime(image_path:str|Path, date:datetime):
 # path = '/localdata/src/python/nashome/photos'
 def fix_photos(path:str|Path, disable_synology:bool):    
     for root, dirnames, filenames in Path(path).walk():
+        if "@" in str(root):
+            continue
         for old_filename in filenames:
             old_path = root/old_filename
             
