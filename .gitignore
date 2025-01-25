@@ -1,5 +1,4 @@
-data/photos
-data/photos_backup
+data/**
 **/config.py
 **/outdir
 **/*.egg-info
