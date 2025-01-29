@@ -23,4 +23,4 @@ LANGUAGES:list[Language] = [
     Language(['swahili'], ['sw', 'swa']),
 ]
 
-PLAYLISTS_FILENAME = "playlists.json"
+PLAYLIST_FILENAME = "playlist.json"
