@@ -8,36 +8,36 @@ import subprocess
 from unidecode import unidecode
 
 from nashome.config.config import tmdb_api_token
-from nashome.youtube.constants import LANGUAGES, PLAYLIST_FILENAME
+from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
-    playlist_on_storage = read_playlist(outdir)
+    stored_videos = read_stored_videos(outdir)
     for url in urls:
         if "@" in url:
-            download_channel(channel_url=url, outdir=outdir, language=language, audio_only=audio_only, playlist_on_storage=playlist_on_storage)
+            download_channel(channel_url=url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
         elif "playlist" in url:
-            download_playlist(playlist_url=url, outdir=outdir, language=language, audio_only=audio_only, playlist_on_storage=playlist_on_storage)
+            download_playlist(playlist_url=url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
         else:
             download_stream(yt=url, outdir=outdir, language=language, audio_only=audio_only)
 
-    if playlist_on_storage:
-        write_playlist(outdir, playlist_on_storage)
+    if stored_videos:
+        write_stored_videos(outdir, stored_videos)
 
-def download_channel(channel_url:str, outdir:str|Path, language:str, audio_only:bool, playlist_on_storage:list[str]):
+def download_channel(channel_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
     print("Downloading channel")
     channel = Channel(channel_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
     for playlist in channel.playlists:
-        download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, audio_only=audio_only, playlist_on_storage=playlist_on_storage)
+        download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
 
-def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool, playlist_on_storage:list[str]):
-    print("Downloading playlist")
+def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
+    print(f"Downloading playlist {playlist_url}")
     playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
 
     for video in playlist.videos:
-        if video.video_id in playlist_on_storage:
+        if video.video_id in stored_videos:
             continue
         download_stream(yt=video, outdir=outdir, language=language, audio_only=audio_only)
-        playlist_on_storage.append(video.video_id)
+        stored_videos.append(video.video_id)
 
 
 def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bool):
@@ -189,12 +189,12 @@ def find_episode_and_season(title:str, series_id:int):
                 return episode['episode_number'], episode['season_number']
     return None, None
 
-def read_playlist(outdir:Path|str) -> list[str]:
-    playlists_path = Path(outdir) / PLAYLIST_FILENAME
-    if not playlists_path.exists():
+def read_stored_videos(outdir:Path|str) -> list[str]:
+    stored_videos_path = Path(outdir) / STORED_VIDEOS_FILENAME
+    if not stored_videos_path.exists():
         return []
-    return json.load(open(playlists_path, 'r'))
+    return json.load(open(stored_videos_path, 'r'))
 
-def write_playlist(outdir:Path|str, playlists:list[str]) -> None:
-    playlists_path = Path(outdir) / PLAYLIST_FILENAME
-    json.dump(playlists, open(playlists_path, 'w'))
+def write_stored_videos(outdir:Path|str, stored_videos:list[str]) -> None:
+    stored_videos_path = Path(outdir) / STORED_VIDEOS_FILENAME
+    json.dump(stored_videos, open(stored_videos_path, 'w'))
