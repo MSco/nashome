@@ -43,7 +43,7 @@ def find_episode_and_season(title:str, series_id:int):
                 return episode['episode_number'], episode['season_number']
     return None, None
 
-REPLACE_STRINGS = {
+KEYWORD_REPLACE = {
     r"_" : "",
     r"\'" : "",
     r"\." : "",
@@ -57,7 +57,7 @@ REPLACE_STRINGS = {
 
 def filter_string(string:str) -> str:
     filtered_string = unidecode(string.lower())
-    for key, value in REPLACE_STRINGS.items():
+    for key, value in KEYWORD_REPLACE.items():
         filtered_string = re.sub(key, value, filtered_string)
 
     return filtered_string.strip()
