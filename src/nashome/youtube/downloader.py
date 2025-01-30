@@ -1,14 +1,13 @@
-import json
 from pathlib import Path
 from pydub import AudioSegment
 from pytubefix import YouTube, Playlist, Channel, Stream, StreamQuery
-import requests
 import shutil
 import subprocess
-from unidecode import unidecode
 
-from nashome.config.config import tmdb_api_token
 from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
+from nashome.youtube.database import read_stored_videos, write_stored_videos
+from nashome.youtube.language import Language
+from nashome.youtube.renamer import generate_filename
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
     stored_videos = read_stored_videos(outdir)
@@ -21,23 +20,31 @@ def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str)
             download_stream(yt=url, outdir=outdir, language=language, audio_only=audio_only)
 
     if stored_videos:
-        write_stored_videos(outdir, stored_videos)
+        stored_videos_path = outdir / STORED_VIDEOS_FILENAME
+        old_videos = read_stored_videos(outdir)
+        if len(old_videos) == len(stored_videos):
+            return
+        
+        print(f"Writing {stored_videos_path}")
+        write_stored_videos(stored_videos=stored_videos, outpath=stored_videos_path)
 
 def download_channel(channel_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
-    print("Downloading channel")
     channel = Channel(channel_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
+    print(f"Downloading channel {channel.channel_name}")
     for playlist in channel.playlists:
         download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
+    print("Channel done.")
 
 def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
-    print(f"Downloading playlist {playlist_url}")
     playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
+    print(f"Downloading playlist {playlist.title}")
 
     for video in playlist.videos:
         if video.video_id in stored_videos:
             continue
         download_stream(yt=video, outdir=outdir, language=language, audio_only=audio_only)
         stored_videos.append(video.video_id)
+    print("Playlist done.")
 
 
 def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bool):
@@ -71,26 +78,8 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
         # Download video
         yt.streams.order_by("resolution").last().download(output_path=str(outdir), filename=output_filename)
 
+    print(f"Stream done.")
     return True
-
-def generate_filename(yt:YouTube, audio_only:bool):
-    dict_series = {
-        'Pokemon': 60572,
-    }
-    suffix = 'm4a' if audio_only else 'mp4'
-    output_filename = None
-    for title_name in dict_series.keys():
-        if title_name.lower() in unidecode(yt.title).lower():
-            episode, season = find_episode_and_season(title=yt.title, series_id=dict_series[title_name])
-            if not episode or not season:
-                continue
-            output_filename = f'{title_name} - s{season:02d}e{episode:03d}.{suffix}'
-            break
-    else:
-        output_filename = f'{yt.title}.{suffix}'
-
-    return output_filename
-
 
 def download_audio(yt:str|YouTube, outdir:str|Path, outfilename:str):
     # define output directory
@@ -136,22 +125,21 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
     # Download video
     yt.streams.order_by("resolution").filter(mime_type="video/mp4").last().download(output_path=str(temporary_directory))
 
+    # Merge audio and video
+    merge_audio_and_video(temporary_directory, outdir / outfilename)
+
+def merge_audio_and_video(indir:Path, outpath:Path):
     # Find audio and video file
     audio_file, video_file = None, None
-    for file in temporary_directory.iterdir():
+    for file in indir.iterdir():
         if file.suffix == '.m4a':
             audio_file = file
         elif file.suffix == '.mp4':
             video_file = file
 
-    # Merge audio and video
-    if audio_file and video_file:
-        merge_audio_and_video(video_file, audio_file, outdir / outfilename)
+    if not audio_file or not video_file:
+        return False
 
-    # Clean up
-    shutil.rmtree(temporary_directory)
-
-def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
     # define ffmpeg command
     command = [
         'ffmpeg',
@@ -169,32 +157,5 @@ def merge_audio_and_video(video_file:Path, audio_file:Path, outpath:Path):
     print(f"Merging audio and video using {command[0]}")
     subprocess.run(command, check=True)
 
-def find_episode_and_season(title:str, series_id:int):
-    # https://developer.themoviedb.org/reference/search-tv
-    # https://developer.themoviedb.org/reference/tv-season-details
-
-    num_seasons = 25
-    for season in range(1, num_seasons+1):
-        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
-        headers = {
-                    "accept": "application/json",
-                    "Authorization": f"Bearer {tmdb_api_token}"
-                }
-        response = requests.get(url, headers=headers)
-        for episode in response.json()['episodes']:
-            tmdb_episode_name = unidecode(episode['name']).lower()
-            title = unidecode(title).lower()
-            if tmdb_episode_name in title or any([part in tmdb_episode_name for part in map(str.strip,title.split("|"))]):
-                print(f"Found {episode['name']} as episode {episode['episode_number']} and season {season} in TMDB.")
-                return episode['episode_number'], episode['season_number']
-    return None, None
-
-def read_stored_videos(outdir:Path|str) -> list[str]:
-    stored_videos_path = Path(outdir) / STORED_VIDEOS_FILENAME
-    if not stored_videos_path.exists():
-        return []
-    return json.load(open(stored_videos_path, 'r'))
-
-def write_stored_videos(outdir:Path|str, stored_videos:list[str]) -> None:
-    stored_videos_path = Path(outdir) / STORED_VIDEOS_FILENAME
-    json.dump(stored_videos, open(stored_videos_path, 'w'))
+    # Clean up
+    shutil.rmtree(indir)
