@@ -55,19 +55,20 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     # define output file name
     output_filename = generate_filename(yt=yt, audio_only=audio_only)
 
-    # create output directory if not exists
-    outdir.mkdir(parents=True, exist_ok=True)
-
-    # progress output
-    print(f"Downloading {"audio" if audio_only else "video"} {yt.title}")
-
-    if audio_only:
-        download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
-        return True
-
+    # check if file already exists
     if outdir/output_filename in outdir.iterdir():
         print(f"File {output_filename} already exists.")
         return False
+    
+    # create output directory
+    outdir.mkdir(parents=True, exist_ok=True)
+    
+    # progress output
+    print(f"Downloading {"audio" if audio_only else "video"} {yt.title}")
+    
+    if audio_only:
+        download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
+        return True
 
     # check if extra audio tracks are available
     audio_tracks = yt.streams.get_extra_audio_track()
