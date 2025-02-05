@@ -7,7 +7,7 @@ import subprocess
 from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
 from nashome.youtube.database import read_stored_videos, write_stored_videos
 from nashome.youtube.language import Language
-from nashome.youtube.renamer import generate_filename
+from nashome.youtube.renamer import build_filename_for_youtube
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
     stored_videos = read_stored_videos(outdir)
@@ -53,7 +53,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
         yt = YouTube(yt, 'WEB', use_oauth=True, allow_oauth_cache=True)
 
     # define output file name
-    output_filename = generate_filename(yt=yt, audio_only=audio_only)
+    output_filename = build_filename_for_youtube(yt=yt, audio_only=audio_only)
 
     # check if file already exists
     if outdir/output_filename in outdir.iterdir():

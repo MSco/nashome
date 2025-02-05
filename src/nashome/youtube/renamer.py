@@ -5,22 +5,27 @@ from unidecode import unidecode
 
 from nashome.config.config import tmdb_api_token
 
-def generate_filename(yt:YouTube, audio_only:bool):
+def build_filename_for_youtube(yt:YouTube, audio_only:bool):
+    title = yt.title
+    suffix = 'm4a' if audio_only else 'mp4'
+    return build_filename(title=title, suffix=suffix)
+
+def build_filename(title:str, suffix:str):
     dict_series = {
         'Pokemon Horizonte': 220150,
         'Pokemon': 60572,
     }
-    suffix = 'm4a' if audio_only else 'mp4'
+    
     output_filename = None
     for title_name in dict_series.keys():
-        if filter_string(title_name) in filter_string(yt.title):
-            episode, season = find_episode_and_season(title=yt.title, series_id=dict_series[title_name])
+        if filter_string(title_name) in filter_string(title):
+            episode, season = find_episode_and_season(title=title, series_id=dict_series[title_name])
             if not episode or not season:
                 continue
             output_filename = f'{title_name} - s{season:02d}e{episode:03d}.{suffix}'
             break
     else:
-        output_filename = f'{yt.title}.{suffix}'
+        output_filename = f'{title}.{suffix}'
 
     return output_filename
 
