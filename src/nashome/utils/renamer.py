@@ -74,7 +74,7 @@ def find_episode_and_season(title:str, series_id:int, language_code:str):
 
     response = requests.get(url, headers=headers)
     num_seasons = response.json()["number_of_seasons"]
-    print(f"TMDB: found {response.json()['name']} with {num_seasons} seasons.")
+    print(f"TMDB: found '{response.json()['name']}' with {num_seasons} seasons.")
 
     for season in range(1, num_seasons+1):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
@@ -89,7 +89,7 @@ def find_episode_and_season(title:str, series_id:int, language_code:str):
             if not tmdb_episode_name or not title:
                 continue
             if tmdb_episode_name in title or title.split("|")[0].strip() in tmdb_episode_name:
-                print(f"TMDB: found {episode['name']} as s{season:02}e{episode['episode_number']:03d}.")
+                print(f"TMDB: found '{episode['name']}' as s{season:02}e{episode['episode_number']:03d}.")
                 return episode['episode_number'], episode['season_number']
     return None, None
 
