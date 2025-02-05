@@ -43,21 +43,24 @@ def find_episode_and_season(title:str, series_id:int):
                 return episode['episode_number'], episode['season_number']
     return None, None
 
-KEYWORD_REPLACE = {
-    r"_" : "",
-    r"\'" : "",
-    r"\." : "",
-    r"\!": "",
-    r"\-" : "",
-    r"\," : "",
-    r"versus" : "vs",
-    r"\&" : "and",
-    r"\s+": " "
-}
+def filter_string(string:str|bytes) -> str:
+    if isinstance(string, bytes):
+        string = string.decode('utf-8', 'ignore')
 
-def filter_string(string:str) -> str:
+    keyword_replace = {
+        r"_" : "",
+        r"\'" : "",
+        r"\." : "",
+        r"\!": "",
+        r"\-" : "",
+        r"\," : "",
+        r"versus" : "vs",
+        r"\&" : "and",
+        r"\s+": " "
+    }
+
     filtered_string = unidecode(string.lower())
-    for key, value in KEYWORD_REPLACE.items():
+    for key, value in keyword_replace.items():
         filtered_string = re.sub(key, value, filtered_string)
 
     return filtered_string.strip()
