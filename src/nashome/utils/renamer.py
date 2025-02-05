@@ -12,8 +12,8 @@ def build_filename_from_youtube(yt:YouTube, audio_only:bool):
     filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code='en-US')
     return f"{filestem}.{suffix}"
 
-def build_filestem_from_epgfile(series_name:str, epg_path:str|Path):
-    regex_epg = re.compile(b"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
+def build_filestem_from_epgfile(series_name:str, epg_path:str|Path, force_tmdb:bool):
+    regex_epg = re.compile(br"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
     
     epg_file = open(epg_path, mode='rb')
     epg_content = epg_file.read()
