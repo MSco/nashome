@@ -7,6 +7,7 @@ from nashome.config.config import tmdb_api_token
 
 def generate_filename(yt:YouTube, audio_only:bool):
     dict_series = {
+        'Pokemon Horizonte': 220150,
         'Pokemon': 60572,
     }
     suffix = 'm4a' if audio_only else 'mp4'
