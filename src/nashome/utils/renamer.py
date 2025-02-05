@@ -19,7 +19,7 @@ def build_filestem_from_epgfile(series_name:str, epg_path:str|Path, force_tmdb:b
     epg_content = epg_file.read()
     
     match_epg = regex_epg.match(epg_content)
-    if match_epg is not None: 
+    if not force_tmdb and match_epg is not None: 
         season = int(match_epg.group(1).decode())
         episode = int(match_epg.group(2).decode())
         
@@ -115,7 +115,7 @@ def filter_string(string:str|bytes) -> str:
 
     return filtered_string.strip()
 
-def cleanup_recordings(paths:list[Path], series:bool, dash:bool):
+def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool):
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
@@ -136,7 +136,7 @@ def cleanup_recordings(paths:list[Path], series:bool, dash:bool):
             name = match_filename.group(1) + " - " + match_filename.group(2) if dash else match_filename.group(1)
             
             if series:
-                newstem = build_filestem_from_epgfile(name, path)
+                newstem = build_filestem_from_epgfile(name, path, force_tmdb)
             else:
                 newstem = name
                 
