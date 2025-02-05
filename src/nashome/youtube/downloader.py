@@ -7,7 +7,7 @@ import subprocess
 from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
 from nashome.youtube.database import read_stored_videos, write_stored_videos
 from nashome.youtube.language import Language
-from nashome.youtube.renamer import build_filename_for_youtube
+from nashome.utils.renamer import build_filename_for_youtube
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
     stored_videos = read_stored_videos(outdir)
