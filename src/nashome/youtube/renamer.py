@@ -29,13 +29,12 @@ def build_filename(title:str, suffix:str):
 
     return output_filename
 
-def find_episode_and_season(title:str, series_id:int):
+def find_episode_and_season(title:str, series_id:int, num_seasons:int, language_code:str):
     # https://developer.themoviedb.org/reference/search-tv
     # https://developer.themoviedb.org/reference/tv-season-details
 
-    num_seasons = 25
     for season in range(1, num_seasons+1):
-        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language=en-US"
+        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
         headers = {
                     "accept": "application/json",
                     "Authorization": f"Bearer {tmdb_api_token}"
