@@ -31,16 +31,18 @@ def build_filestem_from_epgfile(series_name:str, epg_path:str|Path):
         return build_filestem(original_title=series_name, episode_name=episode_name, language_code='de-DE')
 
 def build_filestem(original_title:str, episode_name:str, language_code:str):
+    # https://developer.themoviedb.org/reference/search-tv
+    # https://developer.themoviedb.org/reference/tv-season-details
     # dict = { series_name: [series_id, num_seasons] }
     dict_series = {
-        'Pokemon Horizonte': [220150, 1],
-        'Pokemon': [60572, 25]
+        'Pokemon Horizonte': 220150,
+        'Pokemon': 60572
     }
     
     output_filestem = None
     for series_name in dict_series.keys():
         if filter_string(series_name) in filter_string(original_title):
-            episode, season = find_episode_and_season(title=episode_name, series_id=dict_series[series_name][0], num_seasons=dict_series[series_name][1], language_code=language_code)
+            episode, season = find_episode_and_season(title=episode_name, series_id=dict_series[series_name], language_code=language_code)
             if not episode or not season:
                 continue
             output_filestem = f'{series_name} - s{season:02d}e{episode:03d}'
@@ -62,9 +64,17 @@ def extract_episode_name_from_epgcontent(content:str) -> str:
     
     return None
 
-def find_episode_and_season(title:str, series_id:int, num_seasons:int, language_code:str):
-    # https://developer.themoviedb.org/reference/search-tv
-    # https://developer.themoviedb.org/reference/tv-season-details
+def find_episode_and_season(title:str, series_id:int, language_code:str):
+    url = f"https://api.themoviedb.org/3/tv/{series_id}?language={language_code}"
+
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {tmdb_api_token}"
+    }
+
+    response = requests.get(url, headers=headers)
+    num_seasons = response.json()["number_of_seasons"]
+    print(f"TMDB: found {response.json()['name']} with {num_seasons} seasons.")
 
     for season in range(1, num_seasons+1):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
