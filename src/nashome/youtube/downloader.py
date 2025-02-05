@@ -56,7 +56,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     output_filename = build_filename_from_youtube(yt=yt, audio_only=audio_only)
 
     # check if file already exists
-    if outdir/output_filename in outdir.iterdir():
+    if (outdir/output_filename).is_file():
         print(f"File {output_filename} already exists.")
         return False
     
