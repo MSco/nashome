@@ -56,7 +56,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
     # Calculate the frame index to start at
     frame_index = int(offset_minutes * 60 * fps)
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-
+    key_frame_size = 15
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -67,7 +67,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
 
         # Check for the start template
         if start_frame_index is None and find_template(gray_frame, start_template):
-            start_frame_index = frame_index
+            start_frame_index = frame_index+key_frame_size*2
             print(f"Start template found at frame {start_frame_index}")
             if movie_length_minutes:
                 frame_index += int(60 * fps * (movie_length_minutes))
@@ -76,7 +76,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
         # Check for the end template
         elif start_frame_index is not None and end_frame_index is None:
             if find_template(gray_frame, end_template):
-                end_frame_index = frame_index
+                end_frame_index = frame_index+key_frame_size
                 print(f"End template found at frame {end_frame_index}")
                 break
 
