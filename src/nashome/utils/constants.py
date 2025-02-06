@@ -1,3 +1,4 @@
+from nashome.utils.series import Series
 from nashome.youtube.language import Language
 
 
@@ -22,6 +23,18 @@ LANGUAGE_LIST:list[Language] = [
     Language(['vietnamese'], ['vi', 'vie']),
     Language(['thai'], ['th', 'tha']),
     Language(['swahili'], ['sw', 'swa']),
+]
+
+# https://developer.themoviedb.org/reference/search-tv
+# https://developer.themoviedb.org/reference/tv-season-details
+SERIES_LIST:list[Series] = [
+    Series("Pokemon Horizonte", 220150),
+    Series("Pokemon", 60572, r"(.*?)\|.*"),
+    Series("Die Kickers", 64049),
+    Series("Paw Patrol", 57532, r".*\|(.*)\|.*"),
+    Series("PJ Masks", 65417, r"(?:Ganze Folge:*)?(.*?)[^\u0000-\uFFFF].*"),
+    Series("My Hero Academia", 65930),
+    Series("SpongeBob Schwammkopf", 387)
 ]
 
 STORED_VIDEOS_FILENAME = "stored_videos.json"
