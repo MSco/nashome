@@ -2,11 +2,11 @@ from pathlib import Path
 from pydub import AudioSegment
 from pytubefix import YouTube, Playlist, Channel, Stream, StreamQuery
 import shutil
-import subprocess
 
 from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
 from nashome.youtube.database import read_stored_videos, write_stored_videos
 from nashome.youtube.language import Language
+from nashome.utils.movie import merge_audio_and_video
 from nashome.utils.renamer import build_filename_from_youtube
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
@@ -128,35 +128,3 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
 
     # Merge audio and video
     merge_audio_and_video(temporary_directory, outdir / outfilename)
-
-def merge_audio_and_video(indir:Path, outpath:Path):
-    # Find audio and video file
-    audio_file, video_file = None, None
-    for file in indir.iterdir():
-        if file.suffix == '.m4a':
-            audio_file = file
-        elif file.suffix == '.mp4':
-            video_file = file
-
-    if not audio_file or not video_file:
-        return False
-
-    # define ffmpeg command
-    command = [
-        'ffmpeg',
-        '-i', video_file,
-        '-i', audio_file,
-        '-c:v', 'copy',  # Copy the video stream without re-encoding
-        '-strict', 'experimental',  # Allow experimental codecs if needed
-        '-map', '0:v:0',  # Select the first video stream from the first input
-        '-map', '1:a:0',  # Select the first audio stream from the second input
-        '-loglevel', 'error',  # Suppress output
-        outpath
-    ]
-
-    # run ffmpeg command
-    print(f"Merging audio and video using {command[0]}")
-    subprocess.run(command, check=True)
-
-    # Clean up
-    shutil.rmtree(indir)
