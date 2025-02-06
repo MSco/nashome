@@ -1,5 +1,6 @@
 exif
 ffmpeg-python
+opencv-python
 pydub
 pytubefix
 requests
