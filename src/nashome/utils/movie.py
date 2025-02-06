@@ -32,7 +32,7 @@ def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, thresho
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return max_val >= threshold
 
-def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, outdir:str|Path, offset_minutes:int, movie_length_minutes:int) -> bool:
+def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
     # Load the template images in grayscale
     start_template = cv2.imread(start_template_path, cv2.IMREAD_GRAYSCALE)
     end_template = cv2.imread(end_template_path, cv2.IMREAD_GRAYSCALE)
@@ -52,7 +52,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     # Calculate the frame index to start at
-    frame_index = offset_minutes * 60 * fps
+    frame_index = int(offset_minutes * 60 * fps)
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
 
     while True:
@@ -68,7 +68,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
             start_frame_index = frame_index
             print(f"Start template found at frame {start_frame_index}")
             if movie_length_minutes:
-                frame_index += 60 * fps * (movie_length_minutes)
+                frame_index += int(60 * fps * (movie_length_minutes))
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
 
         # Check for the end template
