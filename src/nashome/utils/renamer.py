@@ -51,35 +51,6 @@ def extract_episode_name_from_epgcontent(content:str) -> str:
     
     return None
 
-def find_episode_and_season(title:str, series_id:int, language_code:str):
-    url = f"https://api.themoviedb.org/3/tv/{series_id}?language={language_code}"
-
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {tmdb_api_token}"
-    }
-
-    response = requests.get(url, headers=headers)
-    num_seasons = response.json()["number_of_seasons"]
-    print(f"TMDB: found '{response.json()['name']}' with {num_seasons} seasons.")
-
-    for season in range(1, num_seasons+1):
-        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
-        headers = {
-                    "accept": "application/json",
-                    "Authorization": f"Bearer {tmdb_api_token}"
-                }
-        response = requests.get(url, headers=headers)
-        for episode in response.json()['episodes']:
-            tmdb_episode_name = filter_string(episode['name'])
-            title = filter_string(title)
-            if not tmdb_episode_name or not title:
-                continue
-            if tmdb_episode_name in title or title.split("|")[0].strip() in tmdb_episode_name:
-                print(f"TMDB: found '{episode['name']}' as s{season:02}e{episode['episode_number']:03d}.")
-                return episode['episode_number'], episode['season_number']
-    return None, None
-
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
         string = string.decode('utf-8', 'ignore')
@@ -101,6 +72,35 @@ def filter_string(string:str|bytes) -> str:
         filtered_string = re.sub(key, value, filtered_string)
 
     return filtered_string.strip()
+
+def find_episode_and_season(title:str, series_id:int, language_code:str):
+    url = f"https://api.themoviedb.org/3/tv/{series_id}?language={language_code}"
+
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {tmdb_api_token}"
+    }
+
+    response = requests.get(url, headers=headers)
+    num_seasons = response.json()["number_of_seasons"]
+    print(f"TMDB: found series '{response.json()['name']}' with {num_seasons} seasons.")
+
+    for season in range(1, num_seasons+1):
+        url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
+        headers = {
+                    "accept": "application/json",
+                    "Authorization": f"Bearer {tmdb_api_token}"
+                }
+        response = requests.get(url, headers=headers)
+        for episode in response.json()['episodes']:
+            tmdb_episode_name = filter_string(episode['name'])
+            title = filter_string(title)
+            if not tmdb_episode_name or not title:
+                continue
+            if tmdb_episode_name in title or title.split("|")[0].strip() in tmdb_episode_name:
+                print(f"TMDB: found episode '{episode['name']}' as s{season:02}e{episode['episode_number']:03d}.")
+                return episode['episode_number'], episode['season_number']
+    return None, None
 
 def find_series(title:str) -> Series:
     for series in SERIES_LIST:
