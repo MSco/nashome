@@ -116,7 +116,11 @@ def filter_string(string:str|bytes) -> str:
 
     return filtered_string.strip()
 
-def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool):
+def find_series(title:str) -> Series:
+    for series in SERIES_LIST:
+        if filter_string(series.name) in filter_string(title):
+            return series
+    return None
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
