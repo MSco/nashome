@@ -32,6 +32,7 @@ include = ["nashome*"]
 dependencies = { file = ["requirements.txt"] }
 
 [project.scripts]
+autocut = "nashome._cmd.autocut:main"
 cleanup-recordings = "nashome._cmd.cleanup_recordings:main"
 create-movie = "nashome._cmd.create_movie:main"
 download-youtube = "nashome._cmd.download_youtube:main"
