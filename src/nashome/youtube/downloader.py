@@ -3,7 +3,7 @@ from pydub import AudioSegment
 from pytubefix import YouTube, Playlist, Channel, Stream, StreamQuery
 import shutil
 
-from nashome.youtube.constants import LANGUAGES, STORED_VIDEOS_FILENAME
+from nashome.utils.constants import LANGUAGE_LIST, STORED_VIDEOS_FILENAME
 from nashome.youtube.database import read_stored_videos, write_stored_videos
 from nashome.youtube.language import Language
 from nashome.utils.movie import merge_audio_and_video
