@@ -101,13 +101,13 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
 
     # define language name if not specified
     if language:
-        if language in LANGUAGES:
-            language:Language = LANGUAGES[LANGUAGES.index(language)]
+        if language in LANGUAGE_LIST:
+            language:Language = LANGUAGE_LIST[LANGUAGE_LIST.index(language)]
         else:
-            print(f"Language {language} not found. Available languages are: {LANGUAGES}")
+            print(f"Language {language} not found. Available languages are: {LANGUAGE_LIST}")
             return False
     else:
-        language = LANGUAGES[0] # default: German
+        language = LANGUAGE_LIST[0] # default: German
 
     # Download audio track
     audio_track_list = [yt.streams.get_default_audio_track(), audio_tracks.order_by('abr').desc()]
