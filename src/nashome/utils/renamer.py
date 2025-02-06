@@ -107,6 +107,8 @@ def find_series(title:str) -> Series:
         if filter_string(series.name) in filter_string(title):
             return series
     return None
+
+def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool, force_rename:bool):
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
@@ -159,11 +161,14 @@ def find_series(title:str) -> Series:
         print("Aborting... Some files would be overwritten. Please see renaming list and check your input.") 
         return False
 
-    print("Commands ok? [Y,n]")
-    response = input()
+    if force_rename:
+        response = 'y'
+    else:
+        print("Commands ok? [Y,n]")
+        response = input()
     if len(response) == 0 or response.lower() == 'y':
         for remove_path in remove_list:
-            print("removing {}".format(remove_path))
+            print(f"removing {remove_path}")
             remove_path.unlink()
         for rename_path in rename_dict:    
             print(f"renaming {rename_path} -> {rename_dict[rename_path]}")
