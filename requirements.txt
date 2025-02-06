@@ -1,4 +1,5 @@
 exif
+ffmpeg-python
 pydub
 pytubefix
 requests
