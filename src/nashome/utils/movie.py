@@ -32,7 +32,7 @@ def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, thresho
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return max_val >= threshold
 
-def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, output_path:str|Path, offset_minutes:int, movie_length_minutes:int) -> bool:
+def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, outdir:str|Path, offset_minutes:int, movie_length_minutes:int) -> bool:
     # Load the template images in grayscale
     start_template = cv2.imread(start_template_path, cv2.IMREAD_GRAYSCALE)
     end_template = cv2.imread(end_template_path, cv2.IMREAD_GRAYSCALE)
@@ -96,7 +96,11 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
     print(f"End time: {end_time} seconds")
 
     # Use FFmpeg to trim the video
-    ffmpeg.input(video_path, ss=start_time, to=end_time).output(str(output_path), c='copy').run()
+    outdir = Path(outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    video_path = Path(video_path)
+    outpath = outdir / f"{video_path.name}"
+    ffmpeg.input(video_path, ss=start_time, to=end_time).output(str(outpath), c='copy').run()
 
-    print(f"Trimmed video saved to {output_path}")
+    print(f"Trimmed video saved to {outdir}")
     return True

@@ -19,7 +19,7 @@ def main():
     cut_video(video_path=args.movie, 
               start_template_path=args.start_template, 
               end_template_path=args.end_template, 
-              output_path=args.outdir, 
+              outdir=args.outdir, 
               offset_minutes=args.offset, 
               movie_length_minutes=args.length)
 
