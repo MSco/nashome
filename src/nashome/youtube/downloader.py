@@ -52,8 +52,12 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     if isinstance(yt, str):
         yt = YouTube(yt, 'WEB', use_oauth=True, allow_oauth_cache=True)
 
+    # check if extra audio tracks are available
+    audio_tracks = yt.streams.get_extra_audio_track()
+    language_code = "en-US" if audio_tracks else "de-DE"
+
     # define output file name
-    output_filename = build_filename_from_youtube(yt=yt, audio_only=audio_only)
+    output_filename = build_filename_from_youtube(yt=yt, audio_only=audio_only, language_code=language_code)
 
     # check if file already exists
     if (outdir/output_filename).is_file():
@@ -69,9 +73,6 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     if audio_only:
         download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
         return True
-
-    # check if extra audio tracks are available
-    audio_tracks = yt.streams.get_extra_audio_track()
 
     if audio_tracks:
         download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, language=language)

@@ -6,10 +6,10 @@ from unidecode import unidecode
 
 from nashome.config.config import tmdb_api_token
 
-def build_filename_from_youtube(yt:YouTube, audio_only:bool):
+def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
     suffix = 'm4a' if audio_only else 'mp4'
     episode_name = extract_episode_name_from_youtube(yt.title)
-    filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code='en-US')
+    filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
 def build_filestem_from_epgfile(series_name:str, epg_path:str|Path, force_tmdb:bool):
