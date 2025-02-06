@@ -74,11 +74,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
         download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
         return True
 
-    if audio_tracks:
-        download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, language=language)
-    else:
-        # Download video
-        yt.streams.order_by("resolution").last().download(output_path=str(outdir), filename=output_filename)
+    download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, language=language)
 
     print(f"Stream done.")
     return True
@@ -110,11 +106,11 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
         language = LANGUAGE_LIST[0] # default: German
 
     # Download audio track
-    audio_track_list = [yt.streams.get_default_audio_track(), audio_tracks.order_by('abr').desc()]
+    audio_track_list = [yt.streams.get_default_audio_track().order_by('abr').desc(), audio_tracks.order_by('abr').desc()]
     for audio_track_listelement in audio_track_list:
         for stream in audio_track_listelement:
             stream:Stream
-            if any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short):
+            if (not audio_tracks) or (any(x in stream.audio_track_name.lower() for x in language.long) or any(x == stream.audio_track_name.lower() for x in language.short)):
                 stream.download(output_path=str(temporary_directory))
                 break
         else:
