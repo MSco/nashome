@@ -1,6 +1,7 @@
 from nashome.youtube.language import Language
 
-LANGUAGES:list[Language] = [
+
+LANGUAGE_LIST:list[Language] = [
     Language(['german', 'deutsch'], ['deu', 'ger', 'de']),
     Language(['english', 'englisch'], ['en', 'eng', 'us']),
     Language(['italian', 'italienisch'], ['it', 'ita']),
