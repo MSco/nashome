@@ -100,7 +100,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
     outdir.mkdir(parents=True, exist_ok=True)
     video_path = Path(video_path)
     outpath = outdir / f"{video_path.name}"
-    ffmpeg.input(video_path, ss=start_time, to=end_time).output(str(outpath), c='copy').run()
+    ffmpeg.input(video_path, ss=start_time, to=end_time).output(str(outpath), c='copy').run(overwrite_output=True)
 
     print(f"Trimmed video saved to {outdir}")
     return True
