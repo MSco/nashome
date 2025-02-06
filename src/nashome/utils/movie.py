@@ -1,3 +1,4 @@
+import cv2
 import ffmpeg
 from pathlib import Path
 import shutil
@@ -21,3 +22,81 @@ def merge_audio_and_video(indir:Path, outpath:Path):
 
     # Clean up
     shutil.rmtree(indir)
+
+def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, threshold:float=0.8) -> bool:
+    """
+    Searches for the template in the given frame.
+    Returns True if the template is found with a confidence above the threshold.
+    """
+    result = cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    return max_val >= threshold
+
+def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, output_path:str|Path, offset_minutes:int, movie_length_minutes:int) -> bool:
+    # Load the template images in grayscale
+    start_template = cv2.imread(start_template_path, cv2.IMREAD_GRAYSCALE)
+    end_template = cv2.imread(end_template_path, cv2.IMREAD_GRAYSCALE)
+
+    # Open the video file
+    cap = cv2.VideoCapture(video_path)
+
+    # Check if the video opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video.")
+        return False
+    
+    start_frame_index = None
+    end_frame_index = None
+
+    # Get the frames per second (fps) of the video
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    # Calculate the frame index to start at
+    frame_index = offset_minutes * 60 * fps
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Convert the frame to grayscale
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Check for the start template
+        if start_frame_index is None and find_template(gray_frame, start_template):
+            start_frame_index = frame_index
+            print(f"Start template found at frame {start_frame_index}")
+            if movie_length_minutes:
+                frame_index += 60 * fps * (movie_length_minutes)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+
+        # Check for the end template
+        elif start_frame_index is not None and end_frame_index is None:
+            if find_template(gray_frame, end_template):
+                end_frame_index = frame_index
+                print(f"End template found at frame {end_frame_index}")
+                break
+
+        frame_index += 1
+
+    # Release the video capture object
+    cap.release()
+
+    # Ensure both templates were found
+    if start_frame_index is None or end_frame_index is None:
+        print("Error: Could not find both templates in the video.")
+        return False
+
+    # Calculate start and end times in seconds
+    start_time = start_frame_index / fps
+    end_time = end_frame_index / fps
+
+    print(f"Start time: {start_time} seconds")
+    print(f"End time: {end_time} seconds")
+
+    # Use FFmpeg to trim the video
+    ffmpeg.input(video_path, ss=start_time, to=end_time).output(str(output_path), c='copy').run()
+
+    print(f"Trimmed video saved to {output_path}")
+    return True
