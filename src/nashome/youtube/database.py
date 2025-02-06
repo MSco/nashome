@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 
-from nashome.youtube.constants import STORED_VIDEOS_FILENAME
+from nashome.utils.constants import STORED_VIDEOS_FILENAME
 
 def read_stored_videos(outdir:Path|str) -> list[str]:
     stored_videos_path = Path(outdir) / STORED_VIDEOS_FILENAME
