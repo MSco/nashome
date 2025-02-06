@@ -5,10 +5,13 @@ import requests
 from unidecode import unidecode
 
 from nashome.config.config import tmdb_api_token
+from nashome.utils.constants import SERIES_LIST
+from nashome.utils.series import Series
 
 def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
     suffix = 'm4a' if audio_only else 'mp4'
-    episode_name = extract_episode_name_from_youtube(yt.title)
+    series = find_series(yt.title)
+    episode_name = series.build_episode_name(yt.title) if series else yt.title
     filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
@@ -31,31 +34,14 @@ def build_filestem_from_epgfile(series_name:str, epg_path:str|Path, force_tmdb:b
         return build_filestem(original_title=series_name, episode_name=episode_name, language_code='de-DE')
 
 def build_filestem(original_title:str, episode_name:str, language_code:str):
-    # https://developer.themoviedb.org/reference/search-tv
-    # https://developer.themoviedb.org/reference/tv-season-details
-    # dict = { series_name: [series_id, num_seasons] }
-    dict_series = {
-        'Pokemon Horizonte': 220150,
-        'Pokemon': 60572,
-        'Die Kickers': 64049
-    }
+    series = find_series(original_title)
     
-    output_filestem = None
-    for series_name in dict_series.keys():
-        if filter_string(series_name) in filter_string(original_title):
-            episode, season = find_episode_and_season(title=episode_name, series_id=dict_series[series_name], language_code=language_code)
-            if not episode or not season:
-                continue
-            output_filestem = f'{series_name} - s{season:02d}e{episode:03d}'
-            break
-    else:
-        output_filestem = f'{episode_name}'
+    if series:
+        episode, season = find_episode_and_season(title=episode_name, series_id=series.series_id, language_code=language_code)
+        if episode and season:
+            return f'{series.name} - s{season:02d}e{episode:03d}'
 
-    return output_filestem
-
-def extract_episode_name_from_youtube(title:str) -> str:
-    episode_name = filter_string(title)
-    return episode_name.split("|")[0].strip()
+    return original_title
 
 def extract_episode_name_from_epgcontent(content:str) -> str:
     filtered_content = filter_string(content)
