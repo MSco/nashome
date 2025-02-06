@@ -1,3 +1,4 @@
+import cv2
 import ffmpeg
 import numpy as np
 from pathlib import Path
@@ -24,19 +25,17 @@ def merge_audio_and_video(indir:Path, outpath:Path):
     # Clean up
     shutil.rmtree(indir)
 
-def find_template(frame:np.ndarray, template:np.ndarray, threshold:float=0.8) -> bool:
+def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, threshold:float=0.8) -> bool:
     """
     Searches for the template in the given frame.
     Returns True if the template is found with a confidence above the threshold.
     """
-    import cv2
     result = cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return max_val >= threshold
 
 def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
     # Load the template images in grayscale
-    import cv2
     start_template = cv2.imread(start_template_path, cv2.IMREAD_GRAYSCALE)
     end_template = cv2.imread(end_template_path, cv2.IMREAD_GRAYSCALE)
 
