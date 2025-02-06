@@ -16,4 +16,7 @@ class Series():
         return self.name == str(other)
     
     def build_episode_name(self, title:str) -> str:
-        return re.match(self.regex, title).group(1).strip()
+        episode_match = re.match(self.regex, title)
+        if episode_match is not None:
+            return re.match(self.regex, title).group(1).strip()
+        return title.strip()
