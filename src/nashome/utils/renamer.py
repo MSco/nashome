@@ -36,7 +36,8 @@ def build_filestem(original_title:str, episode_name:str, language_code:str):
     # dict = { series_name: [series_id, num_seasons] }
     dict_series = {
         'Pokemon Horizonte': 220150,
-        'Pokemon': 60572
+        'Pokemon': 60572,
+        'Die Kickers': 64049
     }
     
     output_filestem = None
