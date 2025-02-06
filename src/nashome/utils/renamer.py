@@ -97,7 +97,7 @@ def find_episode_and_season(title:str, series_id:int, language_code:str):
             title = filter_string(title)
             if not tmdb_episode_name or not title:
                 continue
-            if tmdb_episode_name in title or title.split("|")[0].strip() in tmdb_episode_name:
+            if tmdb_episode_name in title or title in tmdb_episode_name:
                 print(f"TMDB: found episode '{episode['name']}' as s{season:02}e{episode['episode_number']:03d}.")
                 return episode['episode_number'], episode['season_number']
     return None, None
