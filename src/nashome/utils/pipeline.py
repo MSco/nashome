@@ -35,6 +35,11 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
             print(f"Error: No recordings found in {recording_directory.name}.")
             continue
 
+        # Create the output directory
+        outdir = outdir_root_path/recording_directory.name
+        if not outdir.is_dir():
+            outdir.mkdir()
+
         # Create a temporary output directory
         temporary_indir = outdir_root_path / f"_autocut_{template_name}"
         rsync_cmd = ["rsync", "-avP", str(recording_directory)+'/', str(temporary_indir)+'/']
@@ -52,7 +57,7 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
         # Cleanup the recordings
         cleanup_recordings(paths=recording_files, series=True, dash=False, force_tmdb=True, force_rename=True)
 
-        movie_file = temporary_indir.glob("*.ts")
+        movie_file = list(temporary_indir.glob("*.ts"))[0]
         temporary_outdir = temporary_indir / "trimmed"
 
         # Autocut the recordings
@@ -62,6 +67,10 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
                   outdir=temporary_outdir,
                   offset_minutes=5,
                   movie_length_minutes=18)
+
+        # move the files to the output directory        
+        for file in temporary_outdir.iterdir():
+            file.rename(outdir/file.name)
 
         # cleanup the temporary directory
         shutil.rmtree(temporary_indir)    
