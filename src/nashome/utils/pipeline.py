@@ -69,7 +69,7 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
                   movie_length_minutes=18)
 
         # move the files to the output directory        
-        for file in temporary_outdir.iterdir():
+        for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
             file.rename(outdir/file.name)
 
         # cleanup the temporary directory
