@@ -38,6 +38,7 @@ create-movie = "nashome._cmd.create_movie:main"
 download-youtube = "nashome._cmd.download_youtube:main"
 fix-photos = "nashome._cmd.fix_photos:main"
 join-images = "nashome._cmd.join_images:main"
+pipeline-autocut = "nashome._cmd.pipeline_autocut:main"
 sync-savegames =  "nashome._cmd.sync_savegames:main"
 
 [project.urls]
