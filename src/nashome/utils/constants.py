@@ -1,7 +1,6 @@
 from nashome.utils.series import Series
 from nashome.youtube.language import Language
 
-
 LANGUAGE_LIST:list[Language] = [
     Language(['german', 'deutsch'], ['deu', 'ger', 'de']),
     Language(['english', 'englisch'], ['en', 'eng', 'us']),
@@ -43,5 +42,8 @@ SERIES_LIST:list[Series] = [
     Series("Game of Thrones", 1399),
     Series("The Lazarus Project", 194567)
 ]
+
+TEMPLATE_START_TEMPLATE = "<D>_template_start.png"
+TEMPLATE_END_TEMPLATE = "<D>_template_end.png"
 
 STORED_VIDEOS_FILENAME = "stored_videos.json"
