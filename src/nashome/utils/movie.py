@@ -67,7 +67,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
 
         # Check for the start template
         if start_frame_index is None and find_template(gray_frame, start_template):
-            start_frame_index = frame_index+key_frame_size*2
+            start_frame_index = frame_index-frame_index%key_frame_size+key_frame_size
             print(f"Start template found at frame {start_frame_index}")
             if movie_length_minutes:
                 frame_index += int(60 * fps * (movie_length_minutes))
@@ -76,7 +76,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
         # Check for the end template
         elif start_frame_index is not None and end_frame_index is None:
             if find_template(gray_frame, end_template):
-                end_frame_index = frame_index+key_frame_size
+                end_frame_index = frame_index-frame_index%key_frame_size+key_frame_size
                 print(f"End template found at frame {end_frame_index}")
                 break
 
