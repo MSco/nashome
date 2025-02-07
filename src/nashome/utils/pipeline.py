@@ -42,12 +42,15 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
 
         # Create a temporary output directory
         temporary_indir = outdir_root_path / f"_autocut_{template_name}"
-        rsync_cmd = ["rsync", "-avP", str(recording_directory)+'/', str(temporary_indir)+'/']
-        result = subprocess.run(rsync_cmd)
+        if not temporary_indir.is_dir():
+            temporary_indir.mkdir()
 
-        if not result.returncode == 0:
-            print(f"Error: rsync command failed: {" ".join(rsync_cmd)}")
-            continue
+        # copy the recordings to the temporary directory   
+        for file in recording_directory.iterdir():
+            if not file.is_file():
+                continue
+            print(f"Copying {file.name} to {temporary_indir.name}")
+            shutil.copy(file, temporary_indir/file.name)
 
         recording_files = [f for f in temporary_indir.iterdir() if f.is_file()]
         if not recording_files:
