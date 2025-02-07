@@ -4,7 +4,6 @@ import numpy as np
 from pathlib import Path
 import shutil
 
-
 def merge_audio_and_video(indir:Path, outpath:Path):
     # Find audio and video file
     audio_file, video_file = None, None
