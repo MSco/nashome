@@ -28,8 +28,8 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
             continue
 
         # Get all the recordings in the directory
-        recording_files = [f for f in recording_directory.iterdir() if f.is_file()]
-        if not recording_files:
+        recording_movie_files = [f for f in recording_directory.iterdir() if f.is_file() and f.name.endswith(".ts")]
+        if not recording_movie_files:
             print(f"Error: No recordings found in {recording_directory.name}.")
             continue
 
@@ -43,35 +43,35 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
         if not temporary_indir.is_dir():
             temporary_indir.mkdir()
 
-        # copy the recordings to the temporary directory   
-        for file in recording_directory.iterdir():
-            if not file.is_file():
+        for recording_movie_file in recording_movie_files:
+            # copy the recordings to the temporary directory   
+            for file in [f for f in recording_directory.iterdir() if f.name.startswith(recording_movie_file.stem)]:
+                if not file.is_file():
+                    continue
+                print(f"Copying {file.name} to {temporary_indir.name}")
+                shutil.copy(file, temporary_indir/file.name)
+
+            recording_files = [f for f in temporary_indir.iterdir() if f.is_file()]
+            if not recording_files:
+                print(f"Error: No recordings found in {temporary_indir.name}.")
                 continue
-            print(f"Copying {file.name} to {temporary_indir.name}")
-            shutil.copy(file, temporary_indir/file.name)
 
-        recording_files = [f for f in temporary_indir.iterdir() if f.is_file()]
-        if not recording_files:
-            print(f"Error: No recordings found in {temporary_indir.name}.")
-            continue
+            # Cleanup the recordings
+            cleanup_recordings(paths=recording_files, series=True, dash=False, force_tmdb=True, force_rename=True)
 
-        # Cleanup the recordings
-        cleanup_recordings(paths=recording_files, series=True, dash=False, force_tmdb=True, force_rename=True)
+            movie_file = recording_movie_file
+            temporary_outdir = temporary_indir / "trimmed"
 
-        movie_file = list(temporary_indir.glob("*.ts"))[0]
-        temporary_outdir = temporary_indir / "trimmed"
+            # Autocut the recordings
+            cut_video(video_path=movie_file, 
+                    template_dir=template_directory,
+                    outdir=temporary_outdir,
+                    offset_minutes=0,
+                    movie_length_minutes=18)
 
-        # Autocut the recordings
-        cut_video(video_path=movie_file, 
-                  start_template_path=start_template_path, 
-                  end_template_path=end_template_path, 
-                  outdir=temporary_outdir,
-                  offset_minutes=5,
-                  movie_length_minutes=18)
-
-        # move the files to the output directory        
-        for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
-            file.rename(outdir/file.name)
+            # move the files to the output directory        
+            for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
+                file.rename(outdir/file.name)
 
         # cleanup the temporary directory
         shutil.rmtree(temporary_indir)    
