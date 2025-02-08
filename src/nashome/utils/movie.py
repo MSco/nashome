@@ -4,6 +4,8 @@ import numpy as np
 from pathlib import Path
 import shutil
 
+from nashome.utils.constants import TEMPLATE_START_DIRNAME, TEMPLATE_END_DIRNAME
+
 def merge_audio_and_video(indir:Path, outpath:Path):
     # Find audio and video file
     audio_file, video_file = None, None
@@ -33,10 +35,18 @@ def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, thresho
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return max_val >= threshold
 
-def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_path:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
+def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
+    
+    start_template_dir = Path(template_dir)/TEMPLATE_START_DIRNAME
+    end_template_dir = Path(template_dir)/TEMPLATE_END_DIRNAME
+
+    if not start_template_dir.is_dir() or not end_template_dir.is_dir():
+        print("Error: Could not find start or end template directory.")
+        return False
+
     # Load the template images in grayscale
-    start_template = cv2.imread(start_template_path, cv2.IMREAD_GRAYSCALE)
-    end_template = cv2.imread(end_template_path, cv2.IMREAD_GRAYSCALE)
+    start_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in sorted(start_template_dir.iterdir())]
+    end_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in sorted(end_template_dir.iterdir())]
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
@@ -65,7 +75,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Check for the start template
-        if start_frame_index is None and find_template(gray_frame, start_template):
+        if start_frame_index is None and any([find_template(gray_frame, t) for t in start_templates]):
             start_frame_index = frame_index-frame_index%key_frame_size+key_frame_size
             print(f"Start template found at frame {start_frame_index}")
             if movie_length_minutes:
@@ -74,7 +84,7 @@ def cut_video(video_path:str|Path, start_template_path:str|Path, end_template_pa
 
         # Check for the end template
         elif start_frame_index is not None and end_frame_index is None:
-            if find_template(gray_frame, end_template):
+            if any([find_template(gray_frame, t) for t in end_templates]):
                 end_frame_index = frame_index-frame_index%key_frame_size+key_frame_size
                 print(f"End template found at frame {end_frame_index}")
                 break

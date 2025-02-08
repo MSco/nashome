@@ -43,7 +43,7 @@ SERIES_LIST:list[Series] = [
     Series("The Lazarus Project", 194567)
 ]
 
-TEMPLATE_START_TEMPLATE = "<D>_template_start.png"
-TEMPLATE_END_TEMPLATE = "<D>_template_end.png"
+TEMPLATE_START_DIRNAME = "start"
+TEMPLATE_END_DIRNAME = "end"
 
 STORED_VIDEOS_FILENAME = "stored_videos.json"
