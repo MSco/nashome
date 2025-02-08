@@ -59,7 +59,7 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
             # Cleanup the recordings
             cleanup_recordings(paths=recording_files, series=True, dash=False, force_tmdb=True, force_rename=True)
 
-            movie_file = recording_movie_file
+            movie_file = [f for f in temporary_indir.iterdir() if f.is_file() and f.name.endswith(".ts")][0]
             temporary_outdir = temporary_indir / "trimmed"
 
             # Autocut the recordings
