@@ -1,16 +1,15 @@
 from pathlib import Path
 import shutil
 
-from nashome.utils.constants import TEMPLATE_START_TEMPLATE, TEMPLATE_END_TEMPLATE
 from nashome.utils.renamer import cleanup_recordings
-from nashome.utils.movie import cut_video
+from nashome.utils.movie import cut_video, check_template_root_directory
 
-def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outdir_root_path:Path):
+def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path, outdir_root_path:Path):
     # Check if the directories exist
     if not recordings_root_path.is_dir():
         print("Error: The recordings root path does not exist.")
         return False
-    if not template_directory.is_dir():
+    if not template_root_directory.is_dir():
         print("Error: The template directory does not exist.")
         return False
     if not outdir_root_path.is_dir():
@@ -21,11 +20,11 @@ def cleanup_and_autocut(recordings_root_path:Path, template_directory:Path, outd
             continue
 
         template_name = recording_directory.name.lower().replace(" ", "_")
-        start_template_path = template_directory / TEMPLATE_START_TEMPLATE.replace("<D>", template_name)
-        end_template_path = template_directory / TEMPLATE_END_TEMPLATE.replace("<D>", template_name)
+        template_directory = template_root_directory / template_name
 
-        if not start_template_path.is_file() or not end_template_path.is_file():
-            print(f"Error: Could not find templates for {recording_directory.name}.")
+        start_template_images, end_template_images = check_template_root_directory(template_directory)
+        if not start_template_images or not end_template_images:
+            print(f"Error: Could not find start or end template directory for {template_name}.")
             continue
 
         # Get all the recordings in the directory

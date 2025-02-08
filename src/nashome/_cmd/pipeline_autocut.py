@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     cleanup_and_autocut(recordings_root_path=args.recordings, 
-                        template_directory=args.template, 
+                        template_root_directory=args.template, 
                         outdir_root_path=args.outdir)
 
 if __name__ == "__main__":

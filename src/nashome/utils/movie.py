@@ -35,6 +35,24 @@ def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, thresho
     _, max_val, _, _ = cv2.minMaxLoc(result)
     return max_val >= threshold
 
+def check_template_root_directory(template_root_directory:Path) -> tuple[list[Path], list[Path]]:
+    """
+    Checks if the template root directory exists and contains start and end template directories.
+
+    Returns the start and end template image paths if they exist, otherwise None.
+    """
+    start_template_dir = template_root_directory / TEMPLATE_START_DIRNAME
+    end_template_dir = template_root_directory / TEMPLATE_END_DIRNAME
+
+    if not start_template_dir.is_dir() or not end_template_dir.is_dir():
+        print("Error: Could not find start or end template directory.")
+        return None, None
+    
+    start_template_image_paths = sorted([f for f in start_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
+    end_template_image_paths = sorted([f for f in end_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
+
+    return start_template_image_paths, end_template_image_paths
+
 def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
     # Create Path objects
     start_template_dir = Path(template_dir)/TEMPLATE_START_DIRNAME
@@ -46,8 +64,7 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
         return False
 
     # Get the template image paths
-    start_template_image_paths = sorted([f for f in start_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
-    end_template_image_paths = sorted([f for f in end_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
+    start_template_image_paths, end_template_image_paths = check_template_root_directory(template_root_directory=Path(template_dir))
 
     # Check if the template images exist
     if not start_template_image_paths or not end_template_image_paths:
