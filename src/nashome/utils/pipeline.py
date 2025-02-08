@@ -53,7 +53,7 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
 
             recording_files = [f for f in temporary_indir.iterdir() if f.is_file()]
             if not recording_files:
-                print(f"Error: No recordings found in {temporary_indir.name}.")
+                print(f"No recordings found in {temporary_indir.name}.")
                 continue
 
             # Cleanup the recordings
