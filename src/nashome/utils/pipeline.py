@@ -48,7 +48,7 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
             for file in [f for f in recording_directory.iterdir() if f.name.startswith(recording_movie_file.stem)]:
                 if not file.is_file():
                     continue
-                print(f"Copying {file.name} to {temporary_indir.name}")
+                print(f"Copying {file} to {temporary_indir/file.name}")
                 shutil.copy(file, temporary_indir/file.name)
 
             recording_files = [f for f in temporary_indir.iterdir() if f.is_file()]
@@ -71,7 +71,9 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
 
             # move the files to the output directory        
             for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
+                print(f"Moving {file} to {outdir/file.name}")
                 file.rename(outdir/file.name)
 
         # cleanup the temporary directory
+        print(f"Removing {temporary_indir}")
         shutil.rmtree(temporary_indir)    
