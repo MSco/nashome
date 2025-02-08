@@ -1,6 +1,5 @@
 from pathlib import Path
 import shutil
-import subprocess
 
 from nashome.utils.constants import TEMPLATE_START_TEMPLATE, TEMPLATE_END_TEMPLATE
 from nashome.utils.renamer import cleanup_recordings
