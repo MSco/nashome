@@ -4,7 +4,7 @@ import shutil
 from nashome.utils.renamer import cleanup_recordings
 from nashome.utils.movie import cut_video, check_template_root_directory
 
-def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path, outdir_root_path:Path):
+def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path, outdir_root_path:Path, offset:float=0, movie_length_minutes:float=None):
     # Check if the directories exist
     if not recordings_root_path.is_dir():
         print("Error: The recordings root path does not exist.")
@@ -66,8 +66,8 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
             cut_video(video_path=movie_file, 
                     template_dir=template_directory,
                     outdir=temporary_outdir,
-                    offset_minutes=0,
-                    movie_length_minutes=18)
+                    offset_minutes=offset,
+                    movie_length_minutes=movie_length_minutes)
 
             # move the files to the output directory        
             for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
