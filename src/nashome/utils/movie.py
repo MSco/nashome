@@ -32,21 +32,31 @@ def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, thresho
     Returns True if the template is found with a confidence above the threshold.
     """
     result = cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    _, max_val, _, _ = cv2.minMaxLoc(result)
     return max_val >= threshold
 
 def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offset_minutes:float, movie_length_minutes:float) -> bool:
-    
+    # Create Path objects
     start_template_dir = Path(template_dir)/TEMPLATE_START_DIRNAME
     end_template_dir = Path(template_dir)/TEMPLATE_END_DIRNAME
 
+    # Check if the directories exist
     if not start_template_dir.is_dir() or not end_template_dir.is_dir():
         print("Error: Could not find start or end template directory.")
         return False
 
+    # Get the template image paths
+    start_template_image_paths = sorted([f for f in start_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
+    end_template_image_paths = sorted([f for f in end_template_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.png', '.jpg']])
+
+    # Check if the template images exist
+    if not start_template_image_paths or not end_template_image_paths:
+        print("Error: Could not find start or end template images.")
+        return False
+
     # Load the template images in grayscale
-    start_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in sorted(start_template_dir.iterdir())]
-    end_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in sorted(end_template_dir.iterdir())]
+    start_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in start_template_image_paths]
+    end_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in end_template_image_paths]
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
