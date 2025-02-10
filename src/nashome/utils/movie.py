@@ -1,10 +1,10 @@
 import cv2
 import ffmpeg
-import numpy as np
 from pathlib import Path
 import shutil
 
 from nashome.utils.constants import TEMPLATE_START_DIRNAME, TEMPLATE_END_DIRNAME
+from nashome.utils.eit import EitContent
 
 def merge_audio_and_video(indir:Path, outpath:Path):
     # Find audio and video file
@@ -70,6 +70,14 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
     if not start_template_image_paths or not end_template_image_paths:
         print("Error: Could not find start or end template images.")
         return False
+
+    if not movie_length_minutes:
+        eit = EitContent(video_path)
+        duration = eit.getEitDuration()
+        if duration:
+            movie_length_minutes = duration[0] * 60 + duration[1] + duration[2] / 60 
+            print(f"Found move length from EIT: {movie_length_minutes} minutes")
+            movie_length_minutes -= 1
 
     # Load the template images in grayscale
     start_templates = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in start_template_image_paths]
