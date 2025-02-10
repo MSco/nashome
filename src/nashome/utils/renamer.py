@@ -6,6 +6,7 @@ from unidecode import unidecode
 
 from nashome.config.config import tmdb_api_token
 from nashome.utils.constants import SERIES_LIST
+from nashome.utils.eit import EitContent
 from nashome.utils.series import Series
 
 def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
