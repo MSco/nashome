@@ -23,9 +23,23 @@
 import chardet
 import os
 import struct
-import traceback
 
 from datetime import datetime
+
+
+BYTE_TO_ENCODING = {
+	"1": 'iso-8859-5',
+	"2": 'iso-8859-6',
+	"3": 'iso-8859-7',
+	"4": 'iso-8859-8',
+	"5": 'iso-8859-9',
+	"6": 'iso-8859-10',
+	"7": 'iso-8859-11',
+	"9": 'iso-8859-13',
+	"10": 'iso-8859-14',
+	"11": 'iso-8859-15',
+	"21": 'utf-8'
+}
 
 def parseMJD(MJD):
 	# Parse 16 bit unsigned int containing Modified Julian Date,
@@ -229,17 +243,7 @@ class EitContent():
 									byte1 = str(data[pos+6])
 								except:
 									byte1 = ''
-								if byte1=="1": name_event_codepage = 'iso-8859-5'
-								elif byte1=="2": name_event_codepage = 'iso-8859-6'
-								elif byte1=="3": name_event_codepage = 'iso-8859-7'
-								elif byte1=="4": name_event_codepage = 'iso-8859-8'
-								elif byte1=="5": name_event_codepage = 'iso-8859-9'
-								elif byte1=="6": name_event_codepage = 'iso-8859-10'
-								elif byte1=="7": name_event_codepage = 'iso-8859-11'
-								elif byte1=="9": name_event_codepage = 'iso-8859-13'
-								elif byte1=="10": name_event_codepage = 'iso-8859-14'
-								elif byte1=="11": name_event_codepage = 'iso-8859-15'
-								elif byte1=="21": name_event_codepage = 'utf-8'
+								name_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if name_event_codepage:
 									print("[EIT] Found name_event encoding-type: " + name_event_codepage)
 							short_event_description = ""
@@ -248,17 +252,7 @@ class EitContent():
 									byte1 = str(data[pos+7+event_name_length])
 								except:
 									byte1 = ''
-								if byte1=="1": short_event_codepage = 'iso-8859-5'
-								elif byte1=="2": short_event_codepage = 'iso-8859-6'
-								elif byte1=="3": short_event_codepage = 'iso-8859-7'
-								elif byte1=="4": short_event_codepage = 'iso-8859-8'
-								elif byte1=="5": short_event_codepage = 'iso-8859-9'
-								elif byte1=="6": short_event_codepage = 'iso-8859-10'
-								elif byte1=="7": short_event_codepage = 'iso-8859-11'
-								elif byte1=="9": short_event_codepage = 'iso-8859-13'
-								elif byte1=="10": short_event_codepage = 'iso-8859-14'
-								elif byte1=="11": short_event_codepage = 'iso-8859-15'
-								elif byte1=="21": short_event_codepage = 'utf-8'
+								short_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if short_event_codepage:
 									print("[EIT] Found short_event encoding-type: " + short_event_codepage)
 							for i in range (pos+7+event_name_length,pos+length):
@@ -288,17 +282,7 @@ class EitContent():
 									byte1 = str(data[pos+8])
 								except:
 									byte1 = ''
-								if byte1=="1": extended_event_codepage = 'iso-8859-5'
-								elif byte1=="2": extended_event_codepage = 'iso-8859-6'
-								elif byte1=="3": extended_event_codepage = 'iso-8859-7'
-								elif byte1=="4": extended_event_codepage = 'iso-8859-8'
-								elif byte1=="5": extended_event_codepage = 'iso-8859-9'
-								elif byte1=="6": extended_event_codepage = 'iso-8859-10'
-								elif byte1=="7": extended_event_codepage = 'iso-8859-11'
-								elif byte1=="9": extended_event_codepage = 'iso-8859-13'
-								elif byte1=="10": extended_event_codepage = 'iso-8859-14'
-								elif byte1=="11": extended_event_codepage = 'iso-8859-15'
-								elif byte1=="21": extended_event_codepage = 'utf-8'
+								extended_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if extended_event_codepage:
 									print("[EIT] Found extended_event encoding-type: " + extended_event_codepage)
 							for i in range (pos+8,pos+length):
