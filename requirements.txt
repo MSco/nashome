@@ -1,3 +1,4 @@
+chardet
 exif
 ffmpeg-python
 opencv-python
