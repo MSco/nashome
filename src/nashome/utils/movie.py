@@ -72,6 +72,7 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
         return False
 
     if not movie_length_minutes:
+        print(f"Searching for movie length from EIT for {video_path}")
         eit = EitContent(video_path)
         duration = eit.getEitDuration()
         if duration:
