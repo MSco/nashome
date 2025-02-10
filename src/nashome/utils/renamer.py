@@ -16,8 +16,8 @@ def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
     filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
-def build_filestem_from_epgfile(series_name:str, epg_path:str|Path, force_tmdb:bool):
-    regex_epg = re.compile(br"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
+def build_filestem_from_eitfile(series_name:str, epg_path:str|Path, force_tmdb:bool):
+    regex_epg = re.compile(r"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
     
     epg_file = open(epg_path, mode='rb')
     epg_content = epg_file.read()
@@ -130,7 +130,7 @@ def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool
             name = match_filename.group(1) + " - " + match_filename.group(2) if dash else match_filename.group(1)
             
             if series:
-                newstem = build_filestem_from_epgfile(name, path, force_tmdb)
+                newstem = build_filestem_from_eitfile(name, path, force_tmdb)
             else:
                 newstem = name
                 
