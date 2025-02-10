@@ -92,7 +92,7 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
     # Calculate the frame index to start at
     frame_index = int(offset_minutes * 60 * fps)
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-    key_frame_size = 15
+    key_frame_size = 0.6*fps
     while True:
         ret, frame = cap.read()
         if not ret:
