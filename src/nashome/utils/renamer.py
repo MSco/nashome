@@ -9,11 +9,11 @@ from nashome.utils.constants import SERIES_LIST
 from nashome.utils.eit import EitContent
 from nashome.utils.series import Series
 
-def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
+def build_filename_from_title(title:str, audio_only:bool, language_code:str):
     suffix = 'm4a' if audio_only else 'mp4'
-    series = find_series(yt.title)
-    episode_name = series.build_episode_name(yt.title) if series else yt.title
-    filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code=language_code)
+    series = find_series(title)
+    episode_name = series.build_episode_name(title) if series else title
+    filestem = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
 def build_filestem_from_eitfile(series_name:str, eit_path:str|Path, force_tmdb:bool):

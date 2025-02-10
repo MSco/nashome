@@ -7,7 +7,7 @@ from nashome.utils.constants import LANGUAGE_LIST, STORED_VIDEOS_FILENAME
 from nashome.youtube.database import read_stored_videos, write_stored_videos
 from nashome.youtube.language import Language
 from nashome.utils.movie import merge_audio_and_video
-from nashome.utils.renamer import build_filename_from_youtube
+from nashome.utils.renamer import build_filename_from_title
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
     stored_videos = read_stored_videos(outdir)
@@ -57,7 +57,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     language_code = "en-US" if audio_tracks else "de-DE"
 
     # define output file name
-    output_filename = build_filename_from_youtube(yt=yt, audio_only=audio_only, language_code=language_code)
+    output_filename = build_filename_from_title(title=yt.title, audio_only=audio_only, language_code=language_code)
 
     # check if file already exists
     if (outdir/output_filename).is_file():
