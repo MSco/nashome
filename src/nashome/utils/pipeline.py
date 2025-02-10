@@ -74,6 +74,9 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
                 print(f"Moving {file} to {outdir/file.name}")
                 file.rename(outdir/file.name)
 
+            # delete copy of input movie file
+            movie_file.unlink()
+
         # cleanup the temporary directory
         print(f"Removing {temporary_indir}")
         shutil.rmtree(temporary_indir)    
