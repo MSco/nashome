@@ -65,12 +65,13 @@ class EitContent():
 	EIT_SHORT_EVENT_DESCRIPTOR = 0x4d
 	EIT_EXTENDED_EVENT_DESCRIPOR = 0x4e
 
-	def __init__(self, path=None):
+	def __init__(self, path=None, debug=False):
 		self.eit_file = None
 		self.eit_mtime = 0
 
 		self.eit = {}
 		self.iso = None
+		self.debug = debug
 
 		self.__newPath(path)
 		self.__readEitFile()
@@ -87,6 +88,10 @@ class EitContent():
 			if self.eit_file != path:
 				self.eit_file = path
 				self.eit_mtime = 0
+
+	def print(self, obj):
+		if self.debug:
+			print(obj)
 
 
 	def __mk_int(self, s):
@@ -232,13 +237,13 @@ class EitContent():
 							descriptor_length = data[pos+2]
 							ISO_639_language_code = str(data[pos+2:pos+5]).upper()
 							event_name_length = data[pos+5]
-							name_event_description = ""
+							name_event_description = bytearray()
 							for i in range (pos+6,pos+6+event_name_length):
 								try:
 									if str(data[i])=="10" or int(str(data[i]))>31:
-										name_event_description += chr(data[i])
+										name_event_description += data[i].to_bytes()
 								except IndexError as e:
-									print("[EIT] Exception in readEitFile: " + str(e))
+									self.print("[EIT] Exception in readEitFile: " + str(e))
 							if not name_event_codepage:
 								try:
 									byte1 = str(data[pos+6])
@@ -246,8 +251,9 @@ class EitContent():
 									byte1 = ''
 								name_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if name_event_codepage:
-									print("[EIT] Found name_event encoding-type: " + name_event_codepage)
-							short_event_description = ""
+									self.print("[EIT] Found name_event encoding-type: " + name_event_codepage)
+							name_event_description = name_event_description.decode("utf-8", "ignore")
+							short_event_description = bytearray()
 							if not short_event_codepage:
 								try:
 									byte1 = str(data[pos+7+event_name_length])
@@ -255,13 +261,14 @@ class EitContent():
 									byte1 = ''
 								short_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if short_event_codepage:
-									print("[EIT] Found short_event encoding-type: " + short_event_codepage)
+									self.print("[EIT] Found short_event encoding-type: " + short_event_codepage)
 							for i in range (pos+7+event_name_length,pos+length):
 								try:
 									if str(data[i])=="10" or int(str(data[i]))>31:
-										short_event_description += chr(data[i])
+										short_event_description += data[i].to_bytes()
 								except IndexError as e:
-									print("[EIT] Exception in readEitFile: " + str(e))
+									self.print("[EIT] Exception in readEitFile: " + str(e))
+							short_event_description = short_event_description.decode("utf-8", "ignore")
 							if ISO_639_language_code == lang:
 								short_event_descriptor.append(short_event_description)
 								name_event_descriptor.append(name_event_description)
@@ -277,7 +284,7 @@ class EitContent():
 							for i in range (pos+3,pos+6):
 								ISO_639_language_code += chr(data[i])
 							ISO_639_language_code = ISO_639_language_code.upper()
-							extended_event_description = ""
+							extended_event_description = bytearray()
 							if not extended_event_codepage:
 								try:
 									byte1 = str(data[pos+8])
@@ -285,13 +292,14 @@ class EitContent():
 									byte1 = ''
 								extended_event_codepage = BYTE_TO_ENCODING[byte1] if byte1 in BYTE_TO_ENCODING else None
 								if extended_event_codepage:
-									print("[EIT] Found extended_event encoding-type: " + extended_event_codepage)
+									self.print("[EIT] Found extended_event encoding-type: " + extended_event_codepage)
 							for i in range (pos+8,pos+length):
 								try:
 									if str(data[i])=="10" or int(str(data[i]))>31:
-										extended_event_description += chr(data[i])
+										extended_event_description += data[i].to_bytes()
 								except IndexError as e:
-									print("[EIT] Exception in readEitFile: " + str(e))
+									self.print("[EIT] Exception in readEitFile: " + str(e))
+							extended_event_description = extended_event_description.decode("utf-8", "ignore")
 							if ISO_639_language_code == lang:
 								extended_event_descriptor.append(extended_event_description)
 							if (ISO_639_language_code == prev2_ISO_639_language_code) or (prev2_ISO_639_language_code == "x"):
@@ -343,13 +351,13 @@ class EitContent():
 								encdata = chardet.detect(name_event_descriptor)
 								enc = encdata['encoding'].lower()
 								confidence = str(encdata['confidence'])
-								print("[EIT] Detected name_event encoding-type: " + enc + " (" + confidence + ")")
+								self.print("[EIT] Detected name_event encoding-type: " + enc + " (" + confidence + ")")
 								if enc == "utf-8":
 									name_event_descriptor.decode(enc)
 								else:
 									name_event_descriptor = name_event_descriptor.decode(enc).encode('utf-8')
 						except (UnicodeDecodeError, AttributeError) as e:
-							print("[EIT] Exception in readEitFile: " + str(e))
+							self.print("[EIT] Exception in readEitFile: " + str(e))
 					self.eit['name'] = name_event_descriptor
 
 					if short_event_descriptor:
@@ -363,13 +371,13 @@ class EitContent():
 								encdata = chardet.detect(short_event_descriptor)
 								enc = encdata['encoding'].lower()
 								confidence = str(encdata['confidence'])
-								print("[EIT] Detected short_event encoding-type: " + enc + " (" + confidence + ")")
+								self.print("[EIT] Detected short_event encoding-type: " + enc + " (" + confidence + ")")
 								if enc == "utf-8":
 									short_event_descriptor.decode(enc)
 								else:
 									short_event_descriptor = short_event_descriptor.decode(enc).encode('utf-8')
 						except (UnicodeDecodeError, AttributeError) as e:
-							print("[EIT] Exception in readEitFile: " + str(e))
+							self.print("[EIT] Exception in readEitFile: " + str(e))
 					self.eit['short_description'] = re.sub("<x>.*</x>", "", short_event_descriptor)
 
 					if extended_event_descriptor:
@@ -383,13 +391,13 @@ class EitContent():
 								encdata = chardet.detect(extended_event_descriptor.encode())
 								enc = encdata['encoding'].lower()
 								confidence = str(encdata['confidence'])
-								print("[EIT] Detected extended_event encoding-type: " + enc + " (" + confidence + ")")
+								self.print("[EIT] Detected extended_event encoding-type: " + enc + " (" + confidence + ")")
 								if enc == "utf-8":
 									extended_event_descriptor.decode(enc)
 								else:
 									extended_event_descriptor = extended_event_descriptor.decode(enc).encode('utf-8')
 						except (UnicodeDecodeError, AttributeError) as e:
-							print("[EIT] Exception in readEitFile: " + str(e))
+							self.print("[EIT] Exception in readEitFile: " + str(e))
 
 						# This will fix EIT data of RTL group with missing line breaks in extended event description
 						extended_event_descriptor = re.sub('((?:Moderat(?:ion:|or(?:in){0,1})|Vorsitz: |Jur(?:isten|y): |G(?:\xC3\xA4|a)st(?:e){0,1}: |Mit (?:Staatsanwalt|Richter(?:in){0,1}|den Schadenregulierern) |Julia Leisch).*?[a-z]+)(\'{0,1}[0-9A-Z\'])', r'\1\n\n\2', extended_event_descriptor)
