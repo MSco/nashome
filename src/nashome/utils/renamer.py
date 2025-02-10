@@ -16,20 +16,19 @@ def build_filename_from_youtube(yt:YouTube, audio_only:bool, language_code:str):
     filestem = build_filestem(original_title=yt.title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
-def build_filestem_from_eitfile(series_name:str, epg_path:str|Path, force_tmdb:bool):
-    regex_epg = re.compile(r"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
+def build_filestem_from_eitfile(series_name:str, eit_path:str|Path, force_tmdb:bool):
+    regex_episode_number = re.compile(r"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
     
-    epg_file = open(epg_path, mode='rb')
-    epg_content = epg_file.read()
+    eit_content = EitContent(eit_path)
     
-    match_epg = regex_epg.match(epg_content)
+    match_epg = regex_episode_number.match(eit_content.getEitDescription())
     if not force_tmdb and match_epg is not None: 
-        season = int(match_epg.group(1).decode())
-        episode = int(match_epg.group(2).decode())
+        season = int(match_epg.group(1))
+        episode = int(match_epg.group(2))
         
         return f"{series_name} - s{season:02d}e{episode:03d}"
     else:
-        episode_name = extract_episode_name_from_epgcontent(epg_content)
+        episode_name = eit_content.getEitShortDescription()
         if not episode_name:
             episode_name = series_name
         return build_filestem(original_title=series_name, episode_name=episode_name, language_code='de-DE')
