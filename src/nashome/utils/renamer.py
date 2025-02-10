@@ -1,5 +1,4 @@
 from pathlib import Path
-from pytubefix import YouTube
 import re
 import requests
 from unidecode import unidecode
@@ -16,22 +15,34 @@ def build_filename_from_title(title:str, audio_only:bool, language_code:str):
     filestem = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
     return f"{filestem}.{suffix}"
 
-def build_filestem_from_eitfile(series_name:str, eit_path:str|Path, force_tmdb:bool):
+def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool):
+    eit_content = EitContent(eit_path)
+    name = eit_content.getEitName().replace(":", " -")
+
+    if name and not series:
+        return name
+
     regex_episode_number = re.compile(r"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
     
-    eit_content = EitContent(eit_path)
-    
-    match_epg = regex_episode_number.match(eit_content.getEitDescription())
-    if not force_tmdb and match_epg is not None: 
-        season = int(match_epg.group(1))
-        episode = int(match_epg.group(2))
+    match_episode_number = regex_episode_number.match(eit_content.getEitDescription())
+    if not force_tmdb and match_episode_number is not None: 
+        season = int(match_episode_number.group(1))
+        episode = int(match_episode_number.group(2))
         
-        return f"{series_name} - s{season:02d}e{episode:03d}"
+        return f"{name} - s{season:02d}e{episode:03d}"
     else:
         episode_name = eit_content.getEitShortDescription()
         if not episode_name:
-            episode_name = series_name
-        return build_filestem(original_title=series_name, episode_name=episode_name, language_code='de-DE')
+            episode_name = name
+        return build_filestem(original_title=name, episode_name=episode_name, language_code='de-DE')
+
+def build_filestem_from_oldname(filename:str, dash:bool):
+    regex_filename = re.compile(r"^.* - (.*) - (.*)\.eit" if dash else r"^.* - (.*)\.eit")
+    match_filename = regex_filename.match(filename.replace('_', ' '))
+    if match_filename is None:
+        return Path(filename).stem
+    name = match_filename.group(1) + " - " + match_filename.group(2) if dash else match_filename.group(1)
+    return name
 
 def build_filestem(original_title:str, episode_name:str, language_code:str):
     series = find_series(original_title)
@@ -42,14 +53,6 @@ def build_filestem(original_title:str, episode_name:str, language_code:str):
             return f'{series.name} - s{season:02d}e{episode:03d}'
 
     return original_title
-
-def extract_episode_name_from_epgcontent(content:str) -> str:
-    filtered_content = filter_string(content)
-    match_episode = re.match(r".*<x>schedule</x>(.*?)\x00", filtered_content)
-    if match_episode is not None:
-        return match_episode.group(1)
-    
-    return None
 
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
@@ -108,11 +111,9 @@ def find_series(title:str) -> Series:
             return series
     return None
 
-def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool, force_rename:bool):
-    extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
+def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_eit:bool=False):
+    extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt', '.mp4')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
-    
-    regex_filename = re.compile(r"^.* - (.*) - (.*)\.eit" if dash else r"^.* - (.*)\.eit")
     
     remove_list:list[Path] = []
     rename_dict:dict[Path, Path] = {}
@@ -125,14 +126,10 @@ def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool
         if filename.endswith(remove_extensions):
             remove_list.append(path)
         elif filename.endswith('eit'):
-            match_filename = regex_filename.match(filename.replace('_', ' '))
-            name = match_filename.group(1) + " - " + match_filename.group(2) if dash else match_filename.group(1)
-            
-            if series:
-                newstem = build_filestem_from_eitfile(name, path, force_tmdb)
+            if no_eit:
+                newstem = build_filestem_from_oldname(filename, dash)
             else:
-                newstem = name
-                
+                newstem = build_filestem_from_eitfile(path, force_tmdb, series)
             basename = path.stem
             
             for oldpath in [p for p in paths if p.name.startswith(basename) and p.name.endswith(extensions)]:
@@ -141,6 +138,9 @@ def cleanup_recordings(paths:list[Path], series:bool, dash:bool, force_tmdb:bool
                 rename_dict[oldpath] = newpath
                 if not series and suffix == '.ts':
                     touch_oldname_list.append(oldpath)
+        elif filename.endswith('.mp4'):
+            newstem = build_filename_from_title(filename, False, 'de-DE')
+            rename_dict[path] = root / newstem
     
     if len(remove_list)==0 and len(rename_dict)==0:
         print("Nothing to do")
