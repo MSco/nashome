@@ -22,6 +22,7 @@
 
 import chardet
 import os
+import re
 import struct
 
 from datetime import datetime
@@ -369,7 +370,7 @@ class EitContent():
 									short_event_descriptor = short_event_descriptor.decode(enc).encode('utf-8')
 						except (UnicodeDecodeError, AttributeError) as e:
 							print("[EIT] Exception in readEitFile: " + str(e))
-					self.eit['short_description'] = short_event_descriptor
+					self.eit['short_description'] = re.sub("<x>.*</x>", "", short_event_descriptor)
 
 					if extended_event_descriptor:
 						try:
@@ -391,7 +392,6 @@ class EitContent():
 							print("[EIT] Exception in readEitFile: " + str(e))
 
 						# This will fix EIT data of RTL group with missing line breaks in extended event description
-						import re
 						extended_event_descriptor = re.sub('((?:Moderat(?:ion:|or(?:in){0,1})|Vorsitz: |Jur(?:isten|y): |G(?:\xC3\xA4|a)st(?:e){0,1}: |Mit (?:Staatsanwalt|Richter(?:in){0,1}|den Schadenregulierern) |Julia Leisch).*?[a-z]+)(\'{0,1}[0-9A-Z\'])', r'\1\n\n\2', extended_event_descriptor)
 					self.eit['description'] = extended_event_descriptor
 
