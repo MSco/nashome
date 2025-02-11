@@ -63,11 +63,15 @@ def cleanup_and_autocut(recordings_root_path:Path, template_root_directory:Path,
             temporary_outdir = temporary_indir / "trimmed"
 
             # Autocut the recordings
-            cut_video(video_path=movie_file, 
+            success = cut_video(video_path=movie_file, 
                     template_dir=template_directory,
                     outdir=temporary_outdir,
                     offset_minutes=offset,
                     movie_length_minutes=movie_length_minutes)
+
+            if not success:
+                print(f"Error: Could not cut {movie_file}.")
+                continue
 
             # move the files to the output directory        
             for file in list(temporary_outdir.iterdir()) + [f for f in temporary_indir.iterdir() if f.name.endswith((".eit", ".meta"))]:
