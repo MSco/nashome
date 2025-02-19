@@ -65,6 +65,7 @@ def filter_string(string:str|bytes) -> str:
         r"\!": "",
         r"\-" : " ",
         r"\," : "",
+        r"\:" : "",
         r"versus" : "vs",
         r"\&" : "and",
         r"\s+": " "
