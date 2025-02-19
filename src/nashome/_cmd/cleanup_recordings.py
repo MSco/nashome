@@ -19,10 +19,11 @@ def main():
     parser.add_argument('-f', "--force-rename", action='store_true', help="Set this flag to force renaming files without prompt.")
     parser.add_argument('-d', "--dash", type=str, help="Set this flag if the series/movie name contains a dash.")
     parser.add_argument('-n', '-ne', "--no-eit", action='store_true', help="Set this flag to rename files without eit content.")
+    parser.add_argument('-l', "--language", type=str, default="de-DE", help="Set this flag to change language code (default: de-DE).")
     
     args = parser.parse_args()
 
-    cleanup_recordings(paths=args.files, series=args.series, force_tmdb=args.force_tmdb, force_rename=args.force_rename, dash=args.dash, no_eit=args.no_eit)
+    cleanup_recordings(paths=args.files, series=args.series, force_tmdb=args.force_tmdb, force_rename=args.force_rename, dash=args.dash, no_eit=args.no_eit, language_code=args.language)
 
 if __name__ == "__main__":
     main()

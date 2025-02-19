@@ -111,7 +111,7 @@ def find_series(title:str) -> Series:
             return series
     return None
 
-def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_eit:bool=False):
+def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_eit:bool=False, language_code:str='de-DE'):
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt', '.mp4')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
@@ -139,7 +139,7 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
                 if not series and suffix == '.ts':
                     touch_oldname_list.append(oldpath)
         elif filename.endswith('.mp4'):
-            newstem = build_filename_from_title(filename, False, 'de-DE')
+            newstem = build_filename_from_title(filename, False, language_code)
             rename_dict[path] = root / newstem
     
     if len(remove_list)==0 and len(rename_dict)==0:
