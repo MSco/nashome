@@ -44,7 +44,7 @@ SERIES_LIST:list[Series] = [
     Series("Almania", 121062),
     Series("Lieselotte", 105110),
     Series("Mega Man", 1323),
-    Series("Teenage Mutant Ninja Turtles", 160)
+    Series("Teenage Mutant Ninja Turtles", 160, r".*_S\d+E\d+_(.*)\.mp4"),
 ]
 
 TEMPLATE_START_DIRNAME = "start"
