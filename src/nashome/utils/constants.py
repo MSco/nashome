@@ -42,7 +42,8 @@ SERIES_LIST:list[Series] = [
     Series("Game of Thrones", 1399),
     Series("The Lazarus Project", 194567),
     Series("Almania", 121062),
-    Series("Lieselotte", 105110)
+    Series("Lieselotte", 105110),
+    Series("Mega Man", 1323)
 ]
 
 TEMPLATE_START_DIRNAME = "start"
