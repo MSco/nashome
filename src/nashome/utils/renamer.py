@@ -36,7 +36,14 @@ def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool)
             episode_name = name
         return build_filestem(original_title=name, episode_name=episode_name, language_code='de-DE')
 
-def build_filestem_from_oldname(filename:str, dash:bool):
+def build_filestem_from_oldname(filename:str, dash:bool, series:bool):
+    if series:
+        regex_series = re.compile(rf"(.*)_S(\d+)E(\d+)_(.*)")
+        episode_match = regex_series.match(filename)
+        if episode_match is not None:
+            new_name = f"{episode_match.group(1)} - s{int(episode_match.group(2)):02d}e{int(episode_match.group(3)):03d} - {episode_match.group(4)}"
+            return new_name
+
     regex_filename = re.compile(r"^.* - (.*) - (.*)\.eit" if dash else r"^.* - (.*)\.eit")
     match_filename = regex_filename.match(filename.replace('_', ' '))
     if match_filename is None:
@@ -112,7 +119,7 @@ def find_series(title:str) -> Series:
             return series
     return None
 
-def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_eit:bool=False, language_code:str='de-DE'):
+def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_tmdb:bool=False, language_code:str='de-DE'):
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt', '.mp4')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
@@ -127,8 +134,8 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
         if filename.endswith(remove_extensions):
             remove_list.append(path)
         elif filename.endswith('eit'):
-            if no_eit:
-                newstem = build_filestem_from_oldname(filename, dash)
+            if no_tmdb:
+                newstem = build_filestem_from_oldname(filename, dash, series)
             else:
                 newstem = build_filestem_from_eitfile(path, force_tmdb, series)
             basename = path.stem
@@ -140,7 +147,10 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
                 if not series and suffix == '.ts':
                     touch_oldname_list.append(oldpath)
         elif filename.endswith('.mp4'):
-            newstem = build_filename_from_title(filename, False, language_code)
+            if no_tmdb:
+                newstem = build_filestem_from_oldname(filename, dash, series)
+            else:
+                newstem = build_filename_from_title(filename, False, language_code)
             rename_dict[path] = root / newstem
     
     if len(remove_list)==0 and len(rename_dict)==0:
