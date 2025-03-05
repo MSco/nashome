@@ -59,7 +59,7 @@ def build_filestem(original_title:str, episode_name:str, language_code:str):
         if episode and season:
             return f'{series.name} - s{season:02d}e{episode:03d}'
 
-    return original_title
+    return original_title.replace("/", "-")
 
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
