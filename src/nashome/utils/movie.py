@@ -2,6 +2,7 @@ import cv2
 import ffmpeg
 from pathlib import Path
 import shutil
+import subprocess
 
 from nashome.utils.constants import TEMPLATE_START_DIRNAME, TEMPLATE_END_DIRNAME
 from nashome.utils.eit import EitContent
@@ -18,10 +19,27 @@ def merge_audio_and_video(indir:Path, outpath:Path):
     if not audio_file or not video_file:
         return False
 
-    video_input = ffmpeg.input(str(video_file))
-    audio_input = ffmpeg.input(str(audio_file))
+    # video_input = ffmpeg.input(str(video_file))
+    # audio_input = ffmpeg.input(str(audio_file))
 
-    ffmpeg.output(video_input, audio_input, str(outpath), vcodec='copy', acodec='aac', strict='experimental', loglevel="error").run()
+    # ffmpeg.output(video_input, audio_input, str(outpath), vcodec='copy', acodec='aac', strict='experimental', language="ger", loglevel="error").run()
+
+    command = [
+        'ffmpeg',
+        '-i', video_file,
+        '-i', audio_file,
+        '-c:v', 'copy',  # Copy the video stream without re-encoding
+        '-c:a', 'copy',  # Copy the audio stream without re-encoding
+        '-map', '0:v:0',  # Select the first video stream from the first input
+        '-map', '1:a:0',  # Select the first audio stream from the second input
+        '-metadata:s:a:0', 'language=ger',  # Set the language of the audio stream
+        '-loglevel', 'error',  # Suppress output
+        outpath
+    ]
+
+    # run ffmpeg command
+    print(f"Merging audio and video using {command[0]}")
+    subprocess.run(command, check=True)
 
     # Clean up
     shutil.rmtree(indir)
