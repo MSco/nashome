@@ -29,7 +29,7 @@ def merge_audio_and_video(indir:Path, outpath:Path):
         '-i', video_file,
         '-i', audio_file,
         '-c:v', 'copy',  # Copy the video stream without re-encoding
-        '-c:a', 'copy',  # Copy the audio stream without re-encoding
+        '-strict', 'experimental',  # Copy the audio stream without re-encoding
         '-map', '0:v:0',  # Select the first video stream from the first input
         '-map', '1:a:0',  # Select the first audio stream from the second input
         '-metadata:s:a:0', 'language=ger',  # Set the language of the audio stream
