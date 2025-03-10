@@ -1,5 +1,6 @@
 import cv2
 import ffmpeg
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -170,3 +171,82 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
 
     print(f"Trimmed video saved to {outdir}")
     return True
+
+def get_smallest_subtitle_track(input_file) -> tuple[int, int]:
+   """Ermittelt die kleinste Untertitelspur in der Datei mit ffprobe."""
+   cmd = ["ffprobe", "-v", "error", "-select_streams", "s", "-show_streams", "-of", "json", input_file]
+   result = subprocess.run(cmd, capture_output=True, text=True)
+   
+   if result.returncode != 0:
+       print("Fehler beim Analysieren der Datei.")
+       return None, None
+   
+   streams = json.loads(result.stdout).get("streams", [])
+   
+   if not streams:
+       return None, None
+   
+   smallest_track = min(streams, key=lambda s: float(s.get("duration")))
+   return smallest_track["index"], len(streams)
+
+def convert_to_mkv(input_file:Path, output_file:Path, subtitle_index:int):
+    """Run mkvmerge to create mkv with selected subtitle and all video/audio."""
+    cmd = [
+        "mkvmerge",
+        "-o", str(output_file),
+        "--subtitle-tracks",
+        str(subtitle_index),
+        "--track-name",
+        f"{subtitle_index}:German (Forced)",
+        "--language", f"{subtitle_index}:de",
+        "--forced-track", f"{subtitle_index}:yes",
+        "--default-track", f"{subtitle_index}:yes",
+        "--track-enabled-flag", f"{subtitle_index}:yes",
+        str(input_file)
+    ]
+    print("Running command:", ' '.join(cmd))
+    result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print("Error running mkvmerge:", result.stderr)
+        return None
+    else:
+        print(f"Successfully created {output_file}")
+        return True
+
+def convert_video(infile:Path, outdir:Path):
+    print(f"Processing {infile}")
+    if not infile.is_file():
+        print("Input file does not exist.")
+        return None
+
+    if not outdir:
+        outdir = infile.parent
+    output_file = outdir / (infile.stem + '.mkv')
+
+    # Step 1: Select smallest subtitle stream
+    smallest_sub_index, num_subtitles = get_smallest_subtitle_track(infile)
+    if not smallest_sub_index:
+        print("No subtitle streams found.")
+        with open("00_no-subs.txt", "a") as file:
+            file.write(f"{infile}\n")
+            file.close()
+        return None
+    
+    if num_subtitles == 1:
+        print("Only one subtitle stream found.")
+        # with open("01_one-sub.txt", "a") as file:
+        #     file.write(f"{infile}\n")
+        #     file.close()
+    
+    if num_subtitles > 1:
+        print("More than one subtitle stream found.")
+        # with open("02_multiple-subs.txt", "a") as file:
+        #     file.write(f"{infile}\n")
+        #     file.close()
+        print(f"Selected subtitle stream index: {smallest_sub_index} (smallest)")
+
+    # Step 2: Create MKV with selected subtitle stream
+    success = convert_to_mkv(infile, output_file, smallest_sub_index)
+    if success:
+        print(f"Removing {infile}")
+        infile.unlink()
