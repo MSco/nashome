@@ -57,9 +57,9 @@ def build_filestem(original_title:str, episode_name:str, language_code:str) -> t
     if series:
         episode, season, episode_name = find_episode_and_season(title=episode_name, series_id=series.series_id, language_code=language_code)
         if episode and season and episode_name:
-            return f'{series.name} - s{season:02d}e{episode:03d} - {episode_name}', episode_name
+            return f'{series.name} - s{season:02d}e{episode:03d} - {episode_name.replace("/", "-").replace(":", "").replace("?","").replace("*","")}', episode_name
 
-    return original_title.replace("/", "-"), episode_name
+    return original_title.replace("/", "-").replace(":", "").replace("?","").replace("*",""), episode_name
 
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
@@ -109,7 +109,7 @@ def find_episode_and_season(title:str, series_id:int, language_code:str) -> tupl
                 print(f"TMDB: found episode '{episode_name}' as s{season:02}e{episode['episode_number']:03d}.")
                 if not language_code == 'de-DE':
                     episode_name = find_episode_name(series_id, season, episode['episode_number'], "de-DE")
-                return episode['episode_number'], episode['season_number'], episode_name.replace("/", "-")
+                return episode['episode_number'], episode['season_number'], episode_name
     return None, None, None
 
 def find_episode_name(series_id:int, season_id:int, episode_id:int, language_code:str="de-DE") -> str:
