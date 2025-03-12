@@ -52,7 +52,9 @@ SERIES_LIST:list[Series] = [
     Series("Sisi", 153282),
     Series("Die tollen Fußballstars", 25707),
     Series("Captain Tsubasa - Super Kickers 2006", 24106),
-    Series("Captain Tsubasa", 77240)
+    Series("Captain Tsubasa", 77240),
+    Series("Chernobyl", 87108),
+    Series("Ich heirate eine Familie", 36778)
 ]
 
 TEMPLATE_START_DIRNAME = "start"
