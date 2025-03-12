@@ -57,7 +57,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     language_code = "en-US" if audio_tracks else "de-DE"
 
     # define output file name
-    output_filename = build_filename_from_title(title=yt.title, audio_only=audio_only, language_code=language_code)
+    output_filename, episode_name = build_filename_from_title(title=yt.title, audio_only=audio_only, language_code=language_code)
 
     # check if file already exists
     if (outdir/output_filename).is_file():
@@ -74,7 +74,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
         download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
         return True
 
-    download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, language=language)
+    download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, episode_name=episode_name, language=language)
 
     print(f"Stream done.")
     return True
@@ -91,7 +91,7 @@ def download_audio(yt:str|YouTube, outdir:str|Path, outfilename:str):
     # Clean up
     shutil.rmtree(temporary_directory)
 
-def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio_tracks:StreamQuery, language:str):
+def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio_tracks:StreamQuery, episode_name:str, language:str):
     # define temporary directory
     temporary_directory = Path(outdir) / 'tmp' 
 
@@ -124,4 +124,4 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
     yt.streams.order_by("resolution").filter(mime_type="video/mp4").last().download(output_path=str(temporary_directory))
 
     # Merge audio and video
-    merge_audio_and_video(temporary_directory, outdir / outfilename)
+    merge_audio_and_video(temporary_directory, outdir / outfilename, episode_name)

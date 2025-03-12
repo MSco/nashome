@@ -8,7 +8,7 @@ import subprocess
 from nashome.utils.constants import TEMPLATE_START_DIRNAME, TEMPLATE_END_DIRNAME
 from nashome.utils.eit import EitContent
 
-def merge_audio_and_video(indir:Path, outpath:Path):
+def merge_audio_and_video(indir:Path, outpath:Path, episode_name:str=None):
     # Find audio and video file
     audio_file, video_file = None, None
     for file in indir.iterdir():
@@ -33,7 +33,8 @@ def merge_audio_and_video(indir:Path, outpath:Path):
         '-strict', 'experimental',  # Copy the audio stream without re-encoding
         '-map', '0:v:0',  # Select the first video stream from the first input
         '-map', '1:a:0',  # Select the first audio stream from the second input
-        '-metadata:s:a:0', 'language=ger',  # Set the language of the audio stream
+        '-metadata:s:a:0', 'language=ger',  # Set the language of the audio stream,
+        '-metadata', f'title={episode_name if episode_name else ""}',  # Set the title of the output file
         '-loglevel', 'error',  # Suppress output
         outpath
     ]

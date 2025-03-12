@@ -8,19 +8,19 @@ from nashome.utils.constants import SERIES_LIST
 from nashome.utils.eit import EitContent
 from nashome.utils.series import Series
 
-def build_filename_from_title(title:str, audio_only:bool, language_code:str):
+def build_filename_from_title(title:str, audio_only:bool, language_code:str) -> tuple[str, str]:
     suffix = 'm4a' if audio_only else 'mp4'
     series = find_series(title)
     episode_name = series.build_episode_name(title) if series else title
-    filestem = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
-    return f"{filestem}.{suffix}"
+    filestem, episode_name = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
+    return f"{filestem}.{suffix}", (episode_name if series else None)
 
-def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool):
+def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool) -> tuple[str, str]:
     eit_content = EitContent(eit_path)
     name = eit_content.getEitName().replace(":", " -")
 
     if name and not series:
-        return name
+        return name, None
 
     regex_episode_number = re.compile(r"^.*([0-9]+)\. Staffel, Folge ([0-9]+).*")
     
@@ -29,37 +29,37 @@ def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool)
         season = int(match_episode_number.group(1))
         episode = int(match_episode_number.group(2))
         
-        return f"{name} - s{season:02d}e{episode:03d}"
+        return f"{name} - s{season:02d}e{episode:03d} - {eit_content.getEitShortDescription()}", eit_content.getEitShortDescription()
     else:
         episode_name = eit_content.getEitShortDescription()
         if not episode_name:
             episode_name = name
         return build_filestem(original_title=name, episode_name=episode_name, language_code='de-DE')
 
-def build_filestem_from_oldname(filename:str, dash:bool, series:bool):
+def build_filestem_from_oldname(filename:str, dash:bool, series:bool) -> tuple[str, str]:
     if series:
         regex_series = re.compile(rf"(.*)_S(\d+)E(\d+)_(.*)")
         episode_match = regex_series.match(filename)
         if episode_match is not None:
             new_name = f"{episode_match.group(1)} - s{int(episode_match.group(2)):02d}e{int(episode_match.group(3)):03d} - {episode_match.group(4)}"
-            return new_name
+            return new_name, None
 
     regex_filename = re.compile(r"^.* - (.*) - (.*)\.eit" if dash else r"^.* - (.*)\.eit")
     match_filename = regex_filename.match(filename.replace('_', ' '))
     if match_filename is None:
-        return Path(filename).stem
+        return Path(filename).stem, None
     name = match_filename.group(1) + " - " + match_filename.group(2) if dash else match_filename.group(1)
-    return name
+    return name, None
 
-def build_filestem(original_title:str, episode_name:str, language_code:str):
+def build_filestem(original_title:str, episode_name:str, language_code:str) -> tuple[str, str]:
     series = find_series(original_title)
     
     if series:
-        episode, season = find_episode_and_season(title=episode_name, series_id=series.series_id, language_code=language_code)
-        if episode and season:
-            return f'{series.name} - s{season:02d}e{episode:03d}'
+        episode, season, episode_name = find_episode_and_season(title=episode_name, series_id=series.series_id, language_code=language_code)
+        if episode and season and episode_name:
+            return f'{series.name} - s{season:02d}e{episode:03d} - {episode_name}', episode_name
 
-    return original_title.replace("/", "-")
+    return original_title.replace("/", "-"), episode_name
 
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
@@ -84,7 +84,7 @@ def filter_string(string:str|bytes) -> str:
 
     return filtered_string.strip()
 
-def find_episode_and_season(title:str, series_id:int, language_code:str):
+def find_episode_and_season(title:str, series_id:int, language_code:str) -> tuple[int, int, str]:
     url = f"https://api.themoviedb.org/3/tv/{series_id}?language={language_code}"
 
     headers = {
@@ -98,10 +98,6 @@ def find_episode_and_season(title:str, series_id:int, language_code:str):
 
     for season in range(1, num_seasons+1):
         url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season}?language={language_code}"
-        headers = {
-                    "accept": "application/json",
-                    "Authorization": f"Bearer {tmdb_api_token}"
-                }
         response = requests.get(url, headers=headers)
         for episode in response.json()['episodes']:
             tmdb_episode_name = filter_string(episode['name'])
@@ -109,9 +105,22 @@ def find_episode_and_season(title:str, series_id:int, language_code:str):
             if not tmdb_episode_name or not title:
                 continue
             if tmdb_episode_name in title or title in tmdb_episode_name:
-                print(f"TMDB: found episode '{episode['name']}' as s{season:02}e{episode['episode_number']:03d}.")
-                return episode['episode_number'], episode['season_number']
-    return None, None
+                episode_name = episode['name']
+                print(f"TMDB: found episode '{episode_name}' as s{season:02}e{episode['episode_number']:03d}.")
+                if not language_code == 'de-DE':
+                    episode_name = find_episode_name(series_id, season, episode['episode_number'], "de-DE")
+                return episode['episode_number'], episode['season_number'], episode_name.replace("/", "-")
+    return None, None, None
+
+def find_episode_name(series_id:int, season_id:int, episode_id:int, language_code:str="de-DE") -> str:
+    url = f"https://api.themoviedb.org/3/tv/{series_id}/season/{season_id}/episode/{episode_id}?language={language_code}"
+
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {tmdb_api_token}"
+    }
+    response = requests.get(url, headers=headers)
+    return response.json()["name"]
 
 def find_series(title:str) -> Series:
     for series in SERIES_LIST:
@@ -148,9 +157,9 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
                     touch_oldname_list.append(oldpath)
         elif filename.endswith('.mp4'):
             if no_tmdb:
-                newstem = build_filestem_from_oldname(filename, dash, series)
+                newstem,_ = build_filestem_from_oldname(filename, dash, series)
             else:
-                newstem = build_filename_from_title(filename, False, language_code)
+                newstem,_ = build_filename_from_title(filename, False, language_code)
             rename_dict[path] = root / newstem
     
     if len(remove_list)==0 and len(rename_dict)==0:
