@@ -28,7 +28,7 @@ LANGUAGE_LIST:list[Language] = [
 # https://developer.themoviedb.org/reference/tv-season-details
 SERIES_LIST:list[Series] = [
     Series("Pokemon Horizonte", 220150, r".* Folge \d+ \|(.*?)\|.*"),
-    Series("Pokemon", 60572, r"(.*?)\|.*"),
+    Series("Pokemon", 60572, r"(.*?)\|.*", r".*_S\d+E\d+_(.*?)\.(mp4|mkv)"),
     Series("Die Kickers", 64049, r"Die Kickers - (.*) Folge \d+"),
     Series("Paw Patrol", 57532, r".*\|(.*)\|.*"),
     Series("PJ Masks", 65417, r"(?:Ganze Folge:*)?(.*?)[^\u0000-\uFFFF].*"),
