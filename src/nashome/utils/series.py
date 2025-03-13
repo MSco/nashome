@@ -1,7 +1,7 @@
 import re
 
 class Series():
-    def __init__(self, name:str, series_id:int, regex:str=r"(.*)"):
+    def __init__(self, name:str, series_id:int, *regex:tuple[str,...]) -> None:
         self.name = name
         self.series_id = series_id
         self.regex = regex
@@ -19,4 +19,5 @@ class Series():
         episode_match = re.match(self.regex, title)
         if episode_match is not None:
             return re.match(self.regex, title).group(1).strip()
+        
         return title.strip()
