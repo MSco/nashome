@@ -8,8 +8,7 @@ from nashome.utils.constants import SERIES_LIST
 from nashome.utils.eit import EitContent
 from nashome.utils.series import Series
 
-def build_filename_from_title(title:str, audio_only:bool, language_code:str) -> tuple[str, str]:
-    suffix = 'm4a' if audio_only else 'mp4'
+def build_filename_from_title(title:str, suffix:str, language_code:str) -> tuple[str, str]:
     series = find_series(title)
     episode_name = series.build_episode_name(title) if series else title
     filestem, episode_name = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
@@ -129,7 +128,7 @@ def find_series(title:str) -> Series:
     return None
 
 def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_tmdb:bool=False, language_code:str='de-DE'):
-    extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt', '.mp4')
+    extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
     remove_list:list[Path] = []
@@ -155,11 +154,11 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
                 rename_dict[oldpath] = newpath
                 if not series and suffix == '.ts':
                     touch_oldname_list.append(oldpath)
-        elif filename.endswith('.mp4'):
+        elif filename.endswith(('.mp4', '.mkv')):
             if no_tmdb:
                 newstem,_ = build_filestem_from_oldname(filename, dash, series)
             else:
-                newstem,_ = build_filename_from_title(filename, False, language_code)
+                newstem,_ = build_filename_from_title(filename, path.suffix, language_code)
             rename_dict[path] = root / newstem
     
     if len(remove_list)==0 and len(rename_dict)==0:

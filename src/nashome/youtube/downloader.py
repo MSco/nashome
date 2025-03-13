@@ -57,7 +57,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     language_code = "en-US" if audio_tracks else "de-DE"
 
     # define output file name
-    output_filename, episode_name = build_filename_from_title(title=yt.title, audio_only=audio_only, language_code=language_code)
+    output_filename, episode_name = build_filename_from_title(title=yt.title, suffix='m4a' if audio_only else 'mp4', language_code=language_code)
 
     # check if file already exists
     if (outdir/output_filename).is_file():
