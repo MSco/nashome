@@ -9,6 +9,8 @@ from nashome.utils.eit import EitContent
 from nashome.utils.series import Series
 
 def build_filename_from_title(title:str, suffix:str, language_code:str) -> tuple[str, str]:
+    if suffix.startswith('.'):
+        suffix = suffix[1:]
     series = find_series(title)
     episode_name = series.build_episode_name(title) if series else title
     filestem, episode_name = build_filestem(original_title=title, episode_name=episode_name, language_code=language_code)
@@ -69,7 +71,9 @@ def filter_string(string:str|bytes) -> str:
         r"\'" : "",
         r"\." : "",
         r"\!": "",
+        r"\?" : "",
         r"\-" : " ",
+        r"\, " : " ",
         r"\," : "",
         r"\:" : "",
         r"versus" : "vs",
