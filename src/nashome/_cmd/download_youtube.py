@@ -11,10 +11,11 @@ def main():
     parser.add_argument('outdir', type=Path, help="Path to the output directory.")
     parser.add_argument('-a', "--audio-only", action='store_true', help="If specified, only the audio stream will be downloaded and converted to mp3.")
     parser.add_argument('-l', "--language", type=str, help="If specified, the video will be re-dubbed with an extra audio stream in given language, if available (default: German).")
+    parser.add_argument('-ta', "--try-all-seasons", action='store_true', help="If specified, season id will not be read from title. All season ids will be tried.")
     
     args = parser.parse_args()
 
-    download_youtube(urls=args.urls, outdir=args.outdir, audio_only=args.audio_only, language=args.language)
+    download_youtube(urls=args.urls, outdir=args.outdir, audio_only=args.audio_only, language=args.language, try_all_seasons=args.try_all_seasons)
 
 if __name__ == "__main__":
     main()

@@ -9,15 +9,15 @@ from nashome.youtube.language import Language
 from nashome.utils.movie import merge_audio_and_video
 from nashome.utils.renamer import build_filename_from_title
 
-def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str):
+def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str, try_all_seasons:bool):
     stored_videos = read_stored_videos(outdir)
     for url in urls:
         if "@" in url:
-            download_channel(channel_url=url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
+            download_channel(channel_url=url, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, stored_videos=stored_videos)
         elif "playlist" in url:
-            download_playlist(playlist_url=url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
+            download_playlist(playlist_url=url, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, stored_videos=stored_videos)
         else:
-            download_stream(yt=url, outdir=outdir, language=language, audio_only=audio_only)
+            download_stream(yt=url, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only)
 
     if stored_videos:
         stored_videos_path = outdir / STORED_VIDEOS_FILENAME
@@ -28,26 +28,26 @@ def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str)
         print(f"Writing {stored_videos_path}")
         write_stored_videos(stored_videos=stored_videos, outpath=stored_videos_path)
 
-def download_channel(channel_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
+def download_channel(channel_url:str, outdir:str|Path, language:str, try_all_seasons:bool, audio_only:bool, stored_videos:list[str]):
     channel = Channel(channel_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
     print(f"Downloading channel {channel.channel_name}")
     for playlist in channel.playlists:
-        download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, audio_only=audio_only, stored_videos=stored_videos)
+        download_playlist(playlist_url=playlist.playlist_url, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, stored_videos=stored_videos)
     print("Channel done.")
 
-def download_playlist(playlist_url:str, outdir:str|Path, language:str, audio_only:bool, stored_videos:list[str]):
+def download_playlist(playlist_url:str, outdir:str|Path, language:str, try_all_seasons:bool, audio_only:bool, stored_videos:list[str]):
     playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
     print(f"Downloading playlist {playlist.title}")
 
     for video in playlist.videos:
         if video.video_id in stored_videos:
             continue
-        download_stream(yt=video, outdir=outdir, language=language, audio_only=audio_only)
+        download_stream(yt=video, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only)
         stored_videos.append(video.video_id)
     print("Playlist done.")
 
 
-def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bool):
+def download_stream(yt:str|YouTube, outdir:str|Path, language:str, try_all_seasons:bool, audio_only:bool):
     # differentiate between url and YouTube object
     if isinstance(yt, str):
         yt = YouTube(yt, 'WEB', use_oauth=True, allow_oauth_cache=True)
@@ -57,7 +57,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, audio_only:bo
     language_code = "en-US" if audio_tracks else "de-DE"
 
     # define output file name
-    output_filename, episode_name = build_filename_from_title(title=yt.title, suffix='m4a' if audio_only else 'mp4', language_code=language_code)
+    output_filename, episode_name = build_filename_from_title(title=yt.title, suffix='m4a' if audio_only else 'mp4', language_code=language_code, try_all_seasons=try_all_seasons)
 
     # check if file already exists
     if (outdir/output_filename).is_file():

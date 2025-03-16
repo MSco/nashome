@@ -20,10 +20,11 @@ def main():
     parser.add_argument('-d', "--dash", type=str, help="Set this flag if the series/movie name contains a dash.")
     parser.add_argument('-n', '-nt', "--no-tmdb", action='store_true', help="Set this flag to rename files without using tmdb or eit content.")
     parser.add_argument('-l', "--language", type=str, default="de-DE", help="Set this flag to change language code (default: de-DE).")
+    parser.add_argument('-ta', "--try-all-seasons", action='store_true', help="If specified, season id will not be read from title. All season ids will be tried.")
     
     args = parser.parse_args()
 
-    cleanup_recordings(paths=args.files, series=args.series, force_tmdb=args.force_tmdb, force_rename=args.force_rename, dash=args.dash, no_tmdb=args.no_tmdb, language_code=args.language)
+    cleanup_recordings(paths=args.files, series=args.series, force_tmdb=args.force_tmdb, force_rename=args.force_rename, dash=args.dash, no_tmdb=args.no_tmdb, language_code=args.language, try_all_seasons=args.try_all_seasons)
 
 if __name__ == "__main__":
     main()
