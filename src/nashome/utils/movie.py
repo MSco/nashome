@@ -173,7 +173,7 @@ def cut_video(video_path:str|Path, template_dir:str|Path, outdir:str|Path, offse
     print(f"Trimmed video saved to {outdir}")
     return True
 
-def get_smallest_subtitle_track(input_file) -> tuple[int, int]:
+def get_smallest_subtitle_track(input_file) -> int:
    """Ermittelt die kleinste Untertitelspur in der Datei mit ffprobe."""
    cmd = ["ffprobe", "-v", "error", "-select_streams", "s", "-show_streams", "-of", "json", input_file]
    result = subprocess.run(cmd, capture_output=True, text=True)
@@ -187,8 +187,10 @@ def get_smallest_subtitle_track(input_file) -> tuple[int, int]:
    if not streams:
        return None, 0
    
+   print(f"Found {len(streams)} subtitle streams.")
    smallest_track = min(streams, key=lambda s: float(s.get("duration")))
-   return smallest_track["index"], len(streams)
+   print(f"Selected subtitle stream index: {smallest_track["index"]} (smallest)")
+   return smallest_track["index"]
 
 def convert_to_mkv(input_file:Path, output_file:Path, audio_file:Path, delay:float, subtitle:int|Path) -> bool:
     """Run mkvmerge to create mkv with selected subtitle and all video/audio."""
@@ -270,25 +272,7 @@ def convert_video(infile:Path, outdir:Path, audio_file:Path=None, delay:float=0.
         subtitle = subtitle_file
     else:
         # Step 1: Select smallest subtitle stream
-        subtitle, num_subtitles = get_smallest_subtitle_track(infile)
-        if not subtitle:
-            print("No subtitle streams found.")
-            with open("00_no-subs.txt", "a") as file:
-                file.write(f"{infile}\n")
-                file.close()
-        
-        if num_subtitles == 1:
-            print("Only one subtitle stream found.")
-            # with open("01_one-sub.txt", "a") as file:
-            #     file.write(f"{infile}\n")
-            #     file.close()
-        
-        if num_subtitles > 1:
-            print("More than one subtitle stream found.")
-            # with open("02_multiple-subs.txt", "a") as file:
-            #     file.write(f"{infile}\n")
-            #     file.close()
-            print(f"Selected subtitle stream index: {subtitle} (smallest)")
+        subtitle = get_smallest_subtitle_track(infile)
 
     # Step 2: Create MKV with selected subtitle stream
     success = convert_to_mkv(input_file=infile, output_file=output_file, audio_file=audio_file, delay=delay, subtitle=subtitle)
