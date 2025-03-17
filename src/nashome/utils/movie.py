@@ -180,31 +180,51 @@ def get_smallest_subtitle_track(input_file) -> tuple[int, int]:
    
    if result.returncode != 0:
        print("Fehler beim Analysieren der Datei.")
-       return None, None
+       return None, 0
    
    streams = json.loads(result.stdout).get("streams", [])
    
    if not streams:
-       return None, None
+       return None, 0
    
    smallest_track = min(streams, key=lambda s: float(s.get("duration")))
    return smallest_track["index"], len(streams)
 
-def convert_to_mkv(input_file:Path, output_file:Path, subtitle_index:int):
+def convert_to_mkv(input_file:Path, output_file:Path, audio_file:Path, delay:float, subtitle:int|Path) -> bool:
     """Run mkvmerge to create mkv with selected subtitle and all video/audio."""
+    
     cmd = [
         "mkvmerge",
-        "-o", str(output_file),
-        "--subtitle-tracks",
-        str(subtitle_index),
-        "--track-name",
-        f"{subtitle_index}:German (Forced)",
-        "--language", f"{subtitle_index}:de",
-        "--forced-track", f"{subtitle_index}:yes",
-        "--default-track", f"{subtitle_index}:yes",
-        "--track-enabled-flag", f"{subtitle_index}:yes",
-        str(input_file)
-    ]
+        "-o", str(output_file)]
+    
+    subtitle_index = subtitle if isinstance(subtitle, int) else 0
+
+    # Add subtitles
+    subtitle_part = ["--subtitle-tracks",
+                    str(subtitle_index),
+                    "--track-name",
+                    f"{subtitle_index}:German (Forced)",
+                    "--language", f"{subtitle_index}:de",
+                    "--forced-track", f"{subtitle_index}:yes",
+                    "--default-track", f"{subtitle_index}:yes",
+                    "--track-enabled-flag", f"{subtitle_index}:yes"
+                ]
+    if isinstance(subtitle, int): 
+        cmd.extend(subtitle_part)
+
+    # Add audio file
+    if audio_file:
+        cmd.extend(["--no-audio", str(input_file)])
+        if delay:
+            cmd.extend(["-y", f"1:{int(delay*1000)}"])
+        cmd.extend(["--no-video", str(audio_file)])
+    else:
+        cmd.extend([str(input_file)])
+    
+    if isinstance(subtitle, Path):
+        cmd.extend(subtitle_part)
+        cmd.extend([str(subtitle)])
+
     print("Running command:", ' '.join(cmd))
     result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
@@ -214,7 +234,9 @@ def convert_to_mkv(input_file:Path, output_file:Path, subtitle_index:int):
         print(f"Successfully created {output_file}")
         return True
 
-def convert_video(infile:Path, outdir:Path):
+def convert_video(infile:Path, outdir:Path, audio_file:Path=None, delay:float=0.0, subtitle_file:Path=None, no_subtitles:bool=False, delete_input:bool=False):
+    """Converts a movie file to a given output format using mkvmerge."""
+
     print(f"Processing {infile}")
     if not infile.is_file():
         print("Input file does not exist.")
@@ -222,32 +244,60 @@ def convert_video(infile:Path, outdir:Path):
 
     if not outdir:
         outdir = infile.parent
-    output_file = outdir / (infile.stem + '.mkv')
+    output_file = outdir / (infile.stem + (' - merged' if audio_file else '') + '.mkv')
 
-    # Step 1: Select smallest subtitle stream
-    smallest_sub_index, num_subtitles = get_smallest_subtitle_track(infile)
-    if not smallest_sub_index:
-        print("No subtitle streams found.")
-        with open("00_no-subs.txt", "a") as file:
-            file.write(f"{infile}\n")
-            file.close()
+    # Check if audio file exists
+    if audio_file:
+        if not audio_file.is_file():
+            print("Track file does not exist.")
+            return None
+        
+    if no_subtitles and subtitle_file:
+        print("Cannot use --no-subtitles and --subtitle-file at the same time.")
         return None
     
-    if num_subtitles == 1:
-        print("Only one subtitle stream found.")
-        # with open("01_one-sub.txt", "a") as file:
-        #     file.write(f"{infile}\n")
-        #     file.close()
-    
-    if num_subtitles > 1:
-        print("More than one subtitle stream found.")
-        # with open("02_multiple-subs.txt", "a") as file:
-        #     file.write(f"{infile}\n")
-        #     file.close()
-        print(f"Selected subtitle stream index: {smallest_sub_index} (smallest)")
+    if delay and not audio_file:
+        print("Cannot use --delay without --audio-file.")
+        return None
+
+    # check if subtitle file exists
+    if no_subtitles:
+        subtitle = None
+    elif subtitle_file:
+        if not subtitle_file.is_file():
+            print("Subtitle file does not exist.")
+            return None
+        subtitle = subtitle_file
+    else:
+        # Step 1: Select smallest subtitle stream
+        subtitle, num_subtitles = get_smallest_subtitle_track(infile)
+        if not subtitle:
+            print("No subtitle streams found.")
+            with open("00_no-subs.txt", "a") as file:
+                file.write(f"{infile}\n")
+                file.close()
+        
+        if num_subtitles == 1:
+            print("Only one subtitle stream found.")
+            # with open("01_one-sub.txt", "a") as file:
+            #     file.write(f"{infile}\n")
+            #     file.close()
+        
+        if num_subtitles > 1:
+            print("More than one subtitle stream found.")
+            # with open("02_multiple-subs.txt", "a") as file:
+            #     file.write(f"{infile}\n")
+            #     file.close()
+            print(f"Selected subtitle stream index: {subtitle} (smallest)")
 
     # Step 2: Create MKV with selected subtitle stream
-    success = convert_to_mkv(infile, output_file, smallest_sub_index)
-    if success:
+    success = convert_to_mkv(input_file=infile, output_file=output_file, audio_file=audio_file, delay=delay, subtitle=subtitle)
+    if success and delete_input:
         print(f"Removing {infile}")
         infile.unlink()
+        if audio_file:
+            print(f"Removing {audio_file}")
+            audio_file.unlink()
+        if subtitle_file:
+            print(f"Removing {subtitle_file}")
+            subtitle_file.unlink()
