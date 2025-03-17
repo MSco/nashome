@@ -80,10 +80,10 @@ def replace_forbidden_characters(string:str) -> str:
         "*" : "",
         '"' : "",
         "'" : "",
-        "<" : "",
-        ">" : "",
-        "|" : "",
-        "\\" : ""
+        "<" : "-",
+        ">" : "-",
+        "|" : "-",
+        "\\" : "-"
     }
 
     for key, value in keyword_replace.items():
