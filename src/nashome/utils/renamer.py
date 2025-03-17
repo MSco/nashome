@@ -18,7 +18,7 @@ def build_filename_from_title(title:str, suffix:str, language_code:str, try_all_
 
 def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool) -> tuple[str, str]:
     eit_content = EitContent(eit_path)
-    name = eit_content.getEitName().replace(":", " -")
+    name = eit_content.getEitName().replace("/", "-").replace(":", "").replace("?","").replace("*","")
 
     if name and not series:
         return name, None
