@@ -282,6 +282,7 @@ def convert_video(infile:Path, outdir:Path, audio_file:Path=None, delay:float=0.
         if audio_file:
             print(f"Removing {audio_file}")
             audio_file.unlink()
+            output_file.rename(outdir / f"{infile.stem}.mkv")
         if subtitle_file:
             print(f"Removing {subtitle_file}")
             subtitle_file.unlink()
