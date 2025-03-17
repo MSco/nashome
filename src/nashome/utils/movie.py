@@ -246,7 +246,7 @@ def convert_video(infile:Path, outdir:Path, audio_file:Path=None, delay:float=0.
 
     if not outdir:
         outdir = infile.parent
-    output_file = outdir / (infile.stem + (' - merged' if audio_file else '') + '.mkv')
+    output_file = outdir / (infile.stem + (' - merged' if (infile.suffix == ".mkv") else '') + '.mkv')
 
     # Check if audio file exists
     if audio_file:
@@ -279,10 +279,11 @@ def convert_video(infile:Path, outdir:Path, audio_file:Path=None, delay:float=0.
     if success and delete_input:
         print(f"Removing {infile}")
         infile.unlink()
+        if infile.suffix == ".mkv":
+            output_file.rename(outdir / f"{infile.stem}.mkv")
         if audio_file:
             print(f"Removing {audio_file}")
             audio_file.unlink()
-            output_file.rename(outdir / f"{infile.stem}.mkv")
         if subtitle_file:
             print(f"Removing {subtitle_file}")
             subtitle_file.unlink()
