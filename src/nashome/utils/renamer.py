@@ -163,9 +163,9 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
             remove_list.append(path)
         elif filename.endswith('eit'):
             if no_tmdb:
-                newstem = build_filestem_from_oldname(filename, dash, series)
+                newstem,_ = build_filestem_from_oldname(filename, dash, series)
             else:
-                newstem = build_filestem_from_eitfile(path, force_tmdb, series)
+                newstem,_ = build_filestem_from_eitfile(path, force_tmdb, series)
             basename = path.stem
             
             for oldpath in [p for p in paths if p.name.startswith(basename) and p.name.endswith(extensions)]:
