@@ -18,7 +18,7 @@ def build_filename_from_title(title:str, suffix:str, language_code:str, try_all_
 
 def build_filestem_from_eitfile(eit_path:str|Path, force_tmdb:bool, series:bool) -> tuple[str, str]:
     eit_content = EitContent(eit_path)
-    name = eit_content.getEitName().replace("/", "-").replace(":", "").replace("?","").replace("*","")
+    name = replace_forbidden_characters(eit_content.getEitName())
 
     if name and not series:
         return name, None
@@ -59,9 +59,9 @@ def build_filestem(original_title:str, episode_name:str, language_code:str, try_
         season_id = 0 if try_all_seasons else get_season_id(original_title) 
         episode, season, episode_name = find_episode_and_season(title=episode_name, series_id=series.series_id, season_id=season_id, language_code=language_code)
         if episode and season and episode_name:
-            return f'{series.name} - s{season:02d}e{episode:03d} - {episode_name.replace("/", "-").replace(":", "").replace("?","").replace("*","")}', episode_name
+            return f'{series.name} - s{season:02d}e{episode:03d} - {replace_forbidden_characters(episode_name)}', episode_name
 
-    return original_title.replace("/", "-").replace(":", "").replace("?","").replace("*",""), episode_name
+    return replace_forbidden_characters(original_title), episode_name
 
 def get_season_id(title:str) -> int:
     regex_list_season = [re.compile(r".*s(\d+)e\d+.*"), re.compile(r".*staffel (\d+)[^0-9].*"), re.compile(r".*season (\d+)[^0-9].*")]
@@ -71,6 +71,25 @@ def get_season_id(title:str) -> int:
             print(f"Found season id {int(match.group(1))}.")
             return int(match.group(1))
     return 0
+
+def replace_forbidden_characters(string:str) -> str:
+    keyword_replace = {
+        "/" : "-",
+        ":" : "",
+        "?" : "",
+        "*" : "",
+        '"' : "",
+        "'" : "",
+        "<" : "",
+        ">" : "",
+        "|" : "",
+        "\\" : ""
+    }
+
+    for key, value in keyword_replace.items():
+        string = string.replace(key, value)
+    
+    return string
 
 def filter_string(string:str|bytes) -> str:
     if isinstance(string, bytes):
