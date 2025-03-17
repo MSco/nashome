@@ -82,14 +82,14 @@ def filter_string(string:str|bytes) -> str:
         r"\." : "",
         r"\!": "",
         r"\?" : "",
-        r"\-" : "",
+        r"\-" : " ",
         r"\," : " ",
         r"\:" : "",
         r'"' : "",
         r"'" : "",
         r"versus" : "vs",
         r"\&" : "and",
-        r"\s+": " "
+        r"\s+": ""
     }
 
     filtered_string = unidecode(string.lower())
@@ -135,7 +135,8 @@ def find_episode_name(series_id:int, season_id:int, episode_id:int, language_cod
 
     headers = {
         "accept": "application/json",
-        "Authorization": f"Bearer {tmdb_api_token}"
+        "Authorization": f"Bearer {tmdb_api_token}",
+        "Cache-Control": "no-cache"
     }
     response = requests.get(url, headers=headers)
     return response.json()["name"]
