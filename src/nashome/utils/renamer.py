@@ -64,7 +64,7 @@ def build_filestem(original_title:str, episode_name:str, language_code:str, try_
     return replace_forbidden_characters(original_title), episode_name
 
 def get_season_id(title:str) -> int:
-    regex_list_season = [re.compile(r".*s(\d+)e\d+.*"), re.compile(r".*staffel (\d+)[^0-9].*"), re.compile(r".*season (\d+)[^0-9].*")]
+    regex_list_season = [re.compile(r".*s(\d+)e\d+.*"), re.compile(r".*staffel (\d+).*"), re.compile(r".*season (\d+).*")]
     for regex in regex_list_season:
         match = regex.match(title.lower())
         if match:
