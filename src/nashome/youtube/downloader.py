@@ -37,11 +37,6 @@ def download_channel(channel_url:str, outdir:str|Path, language:str, try_all_sea
 
 def download_playlist(playlist_url:str, outdir:str|Path, language:str, try_all_seasons:bool, audio_only:bool, stored_videos:list[str], min_length:int):
     playlist = Playlist(playlist_url, 'WEB', use_oauth=True, allow_oauth_cache=True)
-    # TODO remove workaround:
-    if playlist.length > 220:
-        print(f"Playlist {playlist.title} is too long. Skipping.")
-        return
-    
     print(f"Downloading playlist {playlist.title}")
 
     for video in playlist.videos:
