@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Season Numbering Tabelle</title>
+<style>
+/* Tabelle Desktop */
+table { border-collapse: collapse; width: 100%; }
+td { border: 1px solid #999; padding: 2px; text-align: center; font-size: 11px; }
+
+/* Spalte B nur so breit wie nötig */
+td.col-b {
+    width: 1%;           /* minimaler Breitenwert */
+    white-space: nowrap;  /* verhindert Zeilenumbruch */
+}
+
+/* Mobile Layout */
+@media (max-width: 600px) {
+  table, thead, tbody, th, td, tr { display: block; }
+  tr { margin-bottom: 8px; border: 1px solid #999; border-radius: 4px; padding: 4px; }
+  td { display: flex; justify-content: space-between; padding: 4px; border: none; border-bottom: 1px solid #ddd; }
+  td:last-child { border-bottom: none; }
+  td::before { content: attr(data-label); font-weight: bold; }
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const popup = document.createElement("div");
+    popup.id = "popup";
+    popup.style.display = "none";
+    popup.style.position = "absolute";
+    popup.style.background = "#fff";
+    popup.style.border = "1px solid #999";
+    popup.style.padding = "10px";
+    popup.style.borderRadius = "8px";
+    popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+    popup.style.maxWidth = "300px";
+    popup.style.zIndex = "9999";
+    popup.innerHTML = `
+        <div id="popup-content"></div>
+        <button id="popup-close" style="margin-top:6px;">Schließen</button>
+    `;
+    document.body.appendChild(popup);
+    document.getElementById("popup-close").addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+    document.querySelectorAll(".episode-cell").forEach(cell => {
+        cell.addEventListener("click", function(event) {
+            const season = this.dataset.season;
+            const ep = this.dataset.ep;
+            if (!season || !ep) return;
+            fetch(`/get_code/${season}/${ep}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Serverfehler");
+                    return response.text();
+                })
+                .then(code => {
+                    document.getElementById("popup-content").innerHTML = code;
+                    const x = event.pageX + 10;
+                    const y = event.pageY + 10;
+                    popup.style.left = `${x}px`;
+                    popup.style.top = `${y}px`;
+                    popup.style.display = "block";
+                })
+                .catch(err => {
+                    document.getElementById("popup-content").innerText = "Fehler: " + err;
+                    popup.style.left = `${event.pageX + 10}px`;
+                    popup.style.top = `${event.pageY + 10}px`;
+                    popup.style.display = "block";
+                });
+        });
+    });
+    document.addEventListener("click", function(e) {
+        if (!popup.contains(e.target) && !e.target.classList.contains("episode-cell")) {
+            popup.style.display = "none";
+        }
+    });
+});
+</script>
+</head>
+<body>
+<h2>Season Numbering Übersicht</h2>
+<table>
+{% for r in range(data|length) %}
+    {% set row_data = data[r] %}
+    {% set row_colors = colors[r] %}
+    <tr>
+      {% for c in range(0,2) %}
+        {% set cell_value, season, ep_in_season = row_data[c] %}
+        <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
+            style="background-color: {{ row_colors[c] }};"
+            data-season="{{ season if season is not none else '' }}"
+            data-ep="{{ ep_in_season if ep_in_season is not none else '' }}">
+            {{ cell_value if cell_value is not none else "" }}
+        </td>
+      {% endfor %}
+      {% set end_index = 18 if row_data|length > 18 else row_data|length %}
+      {% for c in range(2, end_index) %}
+        {% set cell_value, season, ep_in_season = row_data[c] %}
+        <td style="background-color: {{ row_colors[c] }};"
+            data-season="{{ season if season is not none else '' }}"
+            data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+            class="episode-cell">
+        {{ cell_value if cell_value is not none else "" }}
+        </td>
+      {% endfor %}
+    </tr>
+    {% for start in range(18, row_data|length, 16) %}
+      <tr>
+        <td></td><td></td>
+        {% for c in range(start, start + 16) %}
+          {% if c < row_data|length %}
+            {% set cell_value, season, ep_in_season = row_data[c] %}
+            <td style="background-color: {{ row_colors[c] }};"
+                data-season="{{ season if season is not none else '' }}"
+                data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+                class="episode-cell">
+            {{ cell_value if cell_value is not none else "" }}
+            </td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+{% endfor %}
+</table>
+</body>
+</html>
