@@ -173,6 +173,68 @@ def read_excel_with_colors(filename, sheet_name=None, start_row=2, end_row=28):
     return data, colors
 
 
+def convert_episode_code(code: str) -> str:
+    """
+    Wandelt Episoden-Codes in das gewünschte Format um.
+    
+    Beispiele:
+    EP001 → 01.001
+    EP083 → 02.001
+    AG005 → 06.005
+    """
+    if not code:
+        return code
+    
+    code = code.upper().strip()
+    
+    # Nur für Codes im Format EP### oder AG###
+    import re
+    m = re.match(r"([A-Z]+)(\d+)", code)
+    if not m:
+        return code
+    
+    prefix, num_str = m.groups()
+    num = int(num_str)
+    
+    # Definiere die Blöcke: (start, end, neue Staffelnummer)
+    blocks = [
+        ("EP", 1, 82, 1),     # Indigo League
+        ("EP", 83, 118, 2),   # Adventures on the Orange Islands
+        ("EP", 119, 159, 3),  # Johto Journeys
+        ("EP", 160, 211, 4),  # Johto League Champions
+        ("EP", 212, 276, 5),  # Master Quest
+        ("AG", 1, 40, 6),     # Advanced Generation
+        ("AG", 41, 92, 7),    # Advanced Challenge
+        ("AG", 93, 145, 8),   # Advanced Battle
+        ("AG", 146, 192, 9),  # Battle Frontier
+        ("DP", 1, 52, 10),    # Diamond & Pearl
+        ("DP", 53, 104, 11),   # Diamond & Pearl Battle Dimension
+        ("DP", 105, 157, 12),  # Diamond & Pearl Galactic Battles
+        ("DP", 158, 191, 13), # Diamond & Pearl Sinnoh League Victors
+        ("BW", 1, 48, 14),    # Black & White
+        ("BW", 49, 97, 15),   # Black & White Rival Destinies
+        ("BW", 98, 142, 16),  # Black & White Adventures in Unova and Beyond
+        ("XY", 1, 49, 17),    # XY
+        ("XY", 50, 93, 18),   # XY Kalos Quest
+        ("XY", 94, 140, 19),   # XYZ
+        ("SM", 1, 43, 20),    # Sun & Moon
+        ("SM", 44, 92, 21),   # Sun & Moon Ultra Adventures
+        ("SM", 93, 146, 22),  # Sun & Moon Ultra Legends
+        ("PM", 1, 48, 23),     # Journeys
+        ("PM", 49, 90, 24),    # Journeys Master Journeys
+        ("PM", 91, 147, 25),   # Journeys Ultimate Journeys
+    ]
+
+    
+    for pfx, start, end, season in blocks:
+        if prefix == pfx and start <= num <= end:
+            # neue Episodennummer innerhalb Staffel
+            new_ep_num = num - start + 1
+            return season, new_ep_num
+    
+    # Falls nicht gefunden, Original zurückgeben
+    return code
+
 # Daten einlesen
 data, colors = read_excel_with_colors(EXCEL_FILE)
 
