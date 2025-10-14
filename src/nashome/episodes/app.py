@@ -12,30 +12,70 @@ template_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "../ep
 print("Template folder:", template_folder)
 app = Flask(__name__, template_folder=template_folder)
 
-# Excel und Farben laden
-raw_data, colors = read_excel_with_colors(EXCEL_FILE)
+# Excel und Farben laden (komplette Tabelle, dynamische Länge)
+raw_data, colors = read_excel_with_colors(EXCEL_FILE, start_row=2, end_row=None)
+print(f"DEBUG: eingelesene Zeilen: {len(raw_data)}")
 
-# Daten für das Template vorbereiten
+# Legenden-Erkennung: Annahme Legende beginnt bei erster Zeile, die das Wort 'Legende' (case-insensitive) enthält
+legend_start_index = None
+for idx, row in enumerate(raw_data):
+    row_strs = [str(c).lower() for c in row if c is not None]
+    if any("legend:" in s for s in row_strs):
+        legend_start_index = idx
+        break
+
+if legend_start_index is not None:
+    episode_rows_raw = raw_data[:legend_start_index]
+    legend_rows_raw = raw_data[legend_start_index:]
+    legend_colors = colors[legend_start_index:]
+else:
+    episode_rows_raw = raw_data
+    legend_rows_raw = []
+    legend_colors = []
+
+# Daten für klassische Episoden-Tabelle vorbereiten (Farben synchron filtern)
 processed_data = []
+processed_colors = []
 current_season = None
-for row in raw_data:
+for idx, row in enumerate(episode_rows_raw):
+    color_row_src = colors[idx]  # gleiche Reihenfolge wie episode_rows_raw
     new_row = []
     first_cell = row[0]
     if first_cell:
         current_season = str(first_cell).strip()
-    # build row structure
     for col_idx, cell in enumerate(row):
         if col_idx == 0:
             new_row.append((str(cell) if cell else "", None, None))
         else:
             ep_num = cell if cell is not None else ""
             new_row.append((str(ep_num), current_season, ep_num))
-    # prüfen ob Zeile (ab Spalte 1) komplett leer ist
-    has_episode_content = any(
-        (t[0] not in (None, "")) for t in new_row[1:]
-    )
+    has_episode_content = any((t[0] not in (None, "")) for t in new_row[1:])
     if has_episode_content:
         processed_data.append(new_row)
+        processed_colors.append(color_row_src)
+
+"""Legende strukturieren: erste Zeile mit 'legend' entfernen (falls vorhanden)."""
+legend_struct = []  # Liste von Zeilen: [(value, color_hex), ...]
+clean_legend_rows_raw = legend_rows_raw
+clean_legend_colors = legend_colors
+if legend_rows_raw:
+    first_text_cells = [str(c).lower() for c in legend_rows_raw[0] if c is not None]
+    if any("legend" in t for t in first_text_cells):
+        clean_legend_rows_raw = legend_rows_raw[1:]
+        clean_legend_colors = legend_colors[1:]
+
+for r_idx, row in enumerate(clean_legend_rows_raw):
+    color_row = clean_legend_colors[r_idx]
+    legend_struct.append([
+        (str(val) if val is not None else "", color_row[c_idx])
+        for c_idx, val in enumerate(row)
+    ])
+
+# Falls letzte Legend-Zeile komplett leer (alle Werte ""), entferne sie
+if legend_struct:
+    last_row_values = [cell_val for (cell_val, _color) in legend_struct[-1]]
+    if all(v.strip() == "" for v in last_row_values):
+        legend_struct.pop()
 
 # Events laden
 with open(EVENTS_FILE, "r", encoding="utf-8") as f:
@@ -61,14 +101,20 @@ def is_pink(hex_color: str) -> bool:
     # Heuristik: starkes Rot, moderates Blau, Grün deutlich geringer als Rot
     return (r > 200) and (b > 150) and (g < r - 30)
 
-# Matrix gleicher Form wie colors für Pink-Flag
+# Matrix gleicher Form wie processed_colors für Pink-Flag
 pink_flags = []
-for row_colors in colors:
+for row_colors in processed_colors:
     pink_flags.append([is_pink(c.upper()) for c in row_colors])
 
 @app.route("/")
 def index():
-    return render_template("episodes.html", data=processed_data, colors=colors, pink_flags=pink_flags)
+    return render_template(
+        "episodes.html",
+        data=processed_data,
+    colors=processed_colors,
+        pink_flags=pink_flags,
+        legend=legend_struct,
+    )
 
 @app.route("/get_code/<int:season>/<int:ep>")
 def get_code(season, ep):

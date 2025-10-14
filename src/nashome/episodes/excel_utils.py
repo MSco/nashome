@@ -98,9 +98,11 @@ def get_cell_color(wb, cell):
         color = "#FFFFFF"
     return color
 
-def read_excel_with_colors(filename, sheet_name=None, start_row=2, end_row=28):
+def read_excel_with_colors(filename, sheet_name=None, start_row=2, end_row=None):
     wb = load_workbook(filename, data_only=True)
     ws = wb[sheet_name] if sheet_name else wb.active
+    if end_row is None:
+        end_row = ws.max_row
     data, colors = [], []
     for row in ws.iter_rows(min_row=start_row, max_row=end_row):
         row_data, row_colors = [], []
