@@ -138,7 +138,6 @@ def get_code(season, ep):
 def get_movie(movie_key):
     # movie_key kann aus der Tabellenzelle stammen; trimmen
     key = f"M{int(movie_key.strip()):02d}"
-    print(key)
     if not key:
         return "Kein Movie-Key", 404
     value = MOVIE_TITLES.get(key)
