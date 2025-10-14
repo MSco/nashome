@@ -7,7 +7,7 @@
 /* Tabelle Desktop */
 
 table {
-  border-collapse: collapse;
+  border-collapse: collapse; /* zurück zu Standard für Rahmen-Konsistenz */
   width: 100%;
   table-layout: auto;
 }
@@ -28,13 +28,19 @@ td.col-b {
   font-weight: bold;
 }
 
-/* Trennlinie vor Beginn einer neuen Staffel */
-tr.season-start td {
-  border-top: 3px solid #000;
+/* Staffel-Trenner Variante A: eigene Zwischenzeile mit Doppel-Linie */
+tr.season-separator td {
+  padding: 0;
+  line-height: 0;
+  border: none;
+  height: 6px; /* Platz für zwei Linien */
+  background:
+    linear-gradient(#000,#000) top/100% 2px no-repeat,
+    linear-gradient(#000,#000) bottom/100% 2px no-repeat;
 }
 
-/* Legend: keine Klicks */
-.legend-table td { pointer-events: none; cursor: default; }
+/* Legend: keine Klicks + fett */
+.legend-table td { pointer-events: none; cursor: default; font-weight: bold; }
 
 /* Klickbare Episoden-Zellen */
 .clickable { cursor: pointer; }
@@ -141,6 +147,8 @@ document.addEventListener("DOMContentLoaded", function() {
 <body>
 <h2>Wichtige Episoden</h2>
 <table id="episodes-table">
+{# Anzahl tatsächlich dargestellter Spalten für Abschlusslinie ermitteln #}
+{% set ns_info = namespace(col_count=0) %}
 {% for r in range(data|length) %}
   {% set row_data = data[r] %}
   {% set row_colors = colors[r] %}
@@ -154,6 +162,7 @@ document.addEventListener("DOMContentLoaded", function() {
   {% if ns.nonempty %}
   {% set row_class = '' %}
   {% if season_name and season_name != prev_season %}
+    <tr class="season-separator"><td colspan="{{ row_data|length }}"></td></tr>
     {% set row_class = 'season-start' %}
   {% endif %}
   <tr class="{{ row_class }}">
@@ -168,7 +177,8 @@ document.addEventListener("DOMContentLoaded", function() {
       {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
-      {% set end_index = 18 if row_data|length > 18 else row_data|length %}
+  {% set end_index = 18 if row_data|length > 18 else row_data|length %}
+  {% if ns_info.col_count == 0 %}{% set ns_info.col_count = end_index %}{% endif %}
       {% for c in range(2, end_index) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
     {% set is_movie = 1 if pink_flags[r][c] else 0 %}
@@ -209,6 +219,8 @@ document.addEventListener("DOMContentLoaded", function() {
   {% endfor %}
     {% endif %}
 {% endfor %}
+{# Abschluss-Doppellinie unter letzter Staffel (#Fallback 1) #}
+<tr class="season-separator"><td colspan="{{ ns_info.col_count if ns_info.col_count>0 else 1 }}"></td></tr>
 </table>
 {% if legend and legend|length > 0 %}
 <h3>Legende</h3>
