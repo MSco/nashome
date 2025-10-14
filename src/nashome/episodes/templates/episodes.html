@@ -201,8 +201,8 @@ document.addEventListener("DOMContentLoaded", function() {
       {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
-  {# Maximal 22 Gesamtspalten: 2 Basis (Season / B) + 20 Episoden-Spalten (breitere Übersicht) #}
-  {% set total_max = 22 %}
+  {# Maximal 12 Gesamtspalten: 2 Basis (Season / B) + 10 Episoden-Spalten (breitere Übersicht) #}
+  {% set total_max = 12 %}
   {% set episodes_per_row = total_max - 2 %}
   {% set end_index = total_max if row_data|length > total_max else row_data|length %}
   {% if ns_info.col_count == 0 %}{% set ns_info.col_count = end_index %}{% endif %}
