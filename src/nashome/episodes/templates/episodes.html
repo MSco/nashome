@@ -75,13 +75,20 @@ document.addEventListener("DOMContentLoaded", function() {
           .then(r => { if(!r.ok) throw new Error('Serverfehler'); return r.text(); })
           .then(code => {
             document.getElementById("popup-content").innerHTML = code;
-            const x = event.pageX + 10; const y = event.pageY + 10;
-            popup.style.left = `${x}px`; popup.style.top = `${y}px`; popup.style.display = 'block';
+            popup.style.display = 'block';
+            // zentrieren
+            const vpW = window.innerWidth; const vpH = window.innerHeight;
+            const rect = popup.getBoundingClientRect();
+            popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
+            popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
           })
           .catch(err => {
             document.getElementById("popup-content").innerText = 'Fehler: '+err;
-            const x = event.pageX + 10; const y = event.pageY + 10;
-            popup.style.left = `${x}px`; popup.style.top = `${y}px`; popup.style.display = 'block';
+            popup.style.display = 'block';
+            const vpW = window.innerWidth; const vpH = window.innerHeight;
+            const rect = popup.getBoundingClientRect();
+            popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
+            popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
           });
         return;
       }
@@ -92,18 +99,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     return response.text();
                 })
                 .then(code => {
-                    document.getElementById("popup-content").innerHTML = code;
-                    const x = event.pageX + 10;
-                    const y = event.pageY + 10;
-                    popup.style.left = `${x}px`;
-                    popup.style.top = `${y}px`;
-                    popup.style.display = "block";
+          document.getElementById("popup-content").innerHTML = code;
+          popup.style.display = "block";
+          const vpW = window.innerWidth; const vpH = window.innerHeight;
+          const rect = popup.getBoundingClientRect();
+          popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
+          popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
                 })
                 .catch(err => {
-                    document.getElementById("popup-content").innerText = "Fehler: " + err;
-                    popup.style.left = `${event.pageX + 10}px`;
-                    popup.style.top = `${event.pageY + 10}px`;
-                    popup.style.display = "block";
+          document.getElementById("popup-content").innerText = "Fehler: " + err;
+          popup.style.display = "block";
+          const vpW = window.innerWidth; const vpH = window.innerHeight;
+          const rect = popup.getBoundingClientRect();
+          popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
+          popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
                 });
         });
     });
