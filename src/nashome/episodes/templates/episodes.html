@@ -57,12 +57,30 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("popup-close").addEventListener("click", () => {
         popup.style.display = "none";
     });
-    document.querySelectorAll(".episode-cell").forEach(cell => {
+  document.querySelectorAll(".episode-cell").forEach(cell => {
         cell.addEventListener("click", function(event) {
             const season = this.dataset.season;
             const ep = this.dataset.ep;
-            if (!season || !ep) return;
-            fetch(`/get_code/${season}/${ep}`)
+      const isMovie = this.dataset.movie === '1';
+      const raw = this.dataset.raw || '';
+      if (isMovie) {
+        if (!raw) return;
+        fetch(`/get_movie/${encodeURIComponent(raw)}`)
+          .then(r => { if(!r.ok) throw new Error('Serverfehler'); return r.text(); })
+          .then(code => {
+            document.getElementById("popup-content").innerHTML = code;
+            const x = event.pageX + 10; const y = event.pageY + 10;
+            popup.style.left = `${x}px`; popup.style.top = `${y}px`; popup.style.display = 'block';
+          })
+          .catch(err => {
+            document.getElementById("popup-content").innerText = 'Fehler: '+err;
+            const x = event.pageX + 10; const y = event.pageY + 10;
+            popup.style.left = `${x}px`; popup.style.top = `${y}px`; popup.style.display = 'block';
+          });
+        return;
+      }
+      if (!season || !ep) return;
+      fetch(`/get_code/${season}/${ep}`)
                 .then(response => {
                     if (!response.ok) throw new Error("Serverfehler");
                     return response.text();
@@ -112,21 +130,26 @@ document.addEventListener("DOMContentLoaded", function() {
   <tr class="{{ row_class }}">
       {% for c in range(0,2) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
-        <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
-            style="background-color: {{ row_colors[c] }};"
-            data-season="{{ season if season is not none else '' }}"
-            data-ep="{{ ep_in_season if ep_in_season is not none else '' }}">
-            {{ cell_value if cell_value is not none else "" }}
+    <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
+      style="background-color: {{ row_colors[c] }};"
+      data-season="{{ season if season is not none else '' }}"
+      data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+      data-movie="0"
+      data-raw="{{ cell_value|e }}">
+      {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
       {% set end_index = 18 if row_data|length > 18 else row_data|length %}
       {% for c in range(2, end_index) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
-        <td style="background-color: {{ row_colors[c] }};"
-            data-season="{{ season if season is not none else '' }}"
-            data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
-            class="episode-cell">
-        {{ cell_value if cell_value is not none else "" }}
+    {% set is_movie = 1 if pink_flags[r][c] else 0 %}
+    <td style="background-color: {{ row_colors[c] }};{{ 'cursor:pointer;' if cell_value }}"
+      data-season="{{ season if season is not none else '' }}"
+      data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+      data-movie="{{ is_movie }}"
+      data-raw="{{ cell_value|e }}"
+      class="episode-cell {{ 'movie-cell' if is_movie else '' }}">
+    {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
     </tr>
@@ -141,11 +164,14 @@ document.addEventListener("DOMContentLoaded", function() {
         {% for c in range(start, start + 16) %}
           {% if c < row_data|length %}
             {% set cell_value, season, ep_in_season = row_data[c] %}
-            <td style="background-color: {{ row_colors[c] }};"
-                data-season="{{ season if season is not none else '' }}"
-                data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
-                class="episode-cell">
-            {{ cell_value if cell_value is not none else "" }}
+      {% set is_movie_chunk = 1 if pink_flags[r][c] else 0 %}
+      <td style="background-color: {{ row_colors[c] }};{{ 'cursor:pointer;' if cell_value }}"
+        data-season="{{ season if season is not none else '' }}"
+        data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+        data-movie="{{ is_movie_chunk }}"
+        data-raw="{{ cell_value|e }}"
+        class="episode-cell {{ 'movie-cell' if is_movie_chunk else '' }}">
+      {{ cell_value if cell_value is not none else "" }}
             </td>
           {% endif %}
         {% endfor %}
