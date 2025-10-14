@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, shrink-to-fit=no" />
 <title>Season Numbering Tabelle</title>
 <style>
 /* Tabelle Desktop */
@@ -60,14 +60,18 @@ tr.season-separator td {
 /* Klickbare Episoden-Zellen */
 .clickable { cursor: pointer; }
 
-/* Mobile Layout Optimierung: Seite nur so breit wie Tabelle */
+/* Mobile Layout Optimierung (Option A): Browser soll nicht auf Höhe fit-zoomen */
 @media (max-width: 600px) {
+  html, body { height:auto; min-height:100%; }
   body { margin:4px; }
   .page-wrapper { display:inline-block; max-width:100%; }
-  /* Tabellen behalten ihr normales Layout (kein block stacken) */
-  #episodes-table, .legend-table { font-size: 11px; }
-  /* Falls horizontales Scrollen nötig, sauber kapseln */
-  .table-scroll { overflow-x:auto; }
+  /* Erstes (Staffel-)Feld darf umbrechen für etwas mehr Höhe, Episoden bleiben kompakt */
+  #episodes-table tr td:nth-child(1) { white-space:normal; text-align:left; }
+  #episodes-table tr td:nth-child(2) { white-space:nowrap; }
+  /* Horizontal scroll statt globaler Zoom */
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  /* Spacer verhindert, dass Browser komplette Höhe initial einpassen möchte */
+  .height-spacer { height:60vh; width:1px; display:block; }
 }
 </style>
 <script>
@@ -158,35 +162,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Mobile Auto-Scaling: Tabelle auf Bildschirmbreite einpassen falls zu schmal dargestellt
-    function autoscaleTable(){
-      const table = document.getElementById('episodes-table');
-      if(!table) return;
-      const vw = window.innerWidth;
-      const rect = table.getBoundingClientRect();
-      // Wenn Tabelle bereits > 80% der Viewport-Breite hat, nichts tun
-      if(rect.width >= vw * 0.8) {
-        table.style.transform = '';
-        table.style.transformOrigin = '';
-        return;
-      }
-      // Skaliere hoch bis max 95% Breite
-      const target = vw * 0.95;
-      if(rect.width === 0) return;
-      const scale = Math.min(1.6, target / rect.width); // harte Obergrenze um Unschärfe zu begrenzen
-      if(scale > 1.01){
-        table.style.transform = 'scale(' + scale.toFixed(3) + ')';
-        table.style.transformOrigin = 'top left';
-      } else {
-        table.style.transform = '';
-        table.style.transformOrigin = '';
-      }
-    }
-    if(window.innerWidth <= 600){
-      setTimeout(autoscaleTable, 50); // nach Rendering
-      window.addEventListener('resize', autoscaleTable);
-      window.addEventListener('orientationchange', function(){ setTimeout(autoscaleTable, 100); });
-    }
+    // Kein Auto-Scaling mehr: Nutzer kann normal zoomen; Browser soll nicht Höhe erzwingen.
 });
 </script>
 </head>
@@ -274,6 +250,7 @@ document.addEventListener("DOMContentLoaded", function() {
 {# Abschluss-Doppellinie unter letzter Staffel (#Fallback 1) #}
 <tr class="season-separator"><td colspan="{{ ns_info.col_count if ns_info.col_count>0 else 1 }}"></td></tr>
 </table>
+<div class="height-spacer" aria-hidden="true"></div>
 </div>
 {% if legend and legend|length > 0 %}
 <h3>Legende</h3>
