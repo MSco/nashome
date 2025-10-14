@@ -163,6 +163,35 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Kein Auto-Scaling mehr: Nutzer kann normal zoomen; Browser soll nicht Höhe erzwingen.
+    function compensateBrowserDownscale(){
+      if(!window.visualViewport) return; // Fallback: nichts tun
+      const vv = window.visualViewport;
+      // Viele Mobile Browser (Safari) setzen initial scale <1 um Höhe einzupassen.
+      // Wenn scale < 1, kompensieren wir mit inverser transform Skalierung auf Wrapper.
+      const wrapper = document.querySelector('.page-wrapper');
+      if(!wrapper) return;
+      const currentScale = vv.scale;
+      if(currentScale < 0.999){
+        const inv = 1 / currentScale;
+        wrapper.style.transformOrigin = 'top left';
+        wrapper.style.transform = 'scale(' + inv.toFixed(4) + ')';
+        // Verhindere horizontales Abschneiden: Breite anpassen
+        const wRect = wrapper.getBoundingClientRect();
+        // Wenn nach Skalierung rechts abgeschnitten, etwas Padding geben
+        wrapper.style.paddingRight = '8px';
+      } else {
+        wrapper.style.transform = '';
+        wrapper.style.transformOrigin = '';
+        wrapper.style.paddingRight = '';
+      }
+    }
+    // Initial versuchen nach kurzer Verzögerung
+    setTimeout(compensateBrowserDownscale, 60);
+    // Bei Resize/Orientation erneut
+    window.addEventListener('resize', function(){ setTimeout(compensateBrowserDownscale, 40); });
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize', function(){ setTimeout(compensateBrowserDownscale, 40); });
+    }
 });
 </script>
 </head>
