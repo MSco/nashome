@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Season Numbering Tabelle</title>
 <style>
 /* Tabelle Desktop */
@@ -157,6 +157,36 @@ document.addEventListener("DOMContentLoaded", function() {
             popup.style.display = "none";
         }
     });
+
+    // Mobile Auto-Scaling: Tabelle auf Bildschirmbreite einpassen falls zu schmal dargestellt
+    function autoscaleTable(){
+      const table = document.getElementById('episodes-table');
+      if(!table) return;
+      const vw = window.innerWidth;
+      const rect = table.getBoundingClientRect();
+      // Wenn Tabelle bereits > 80% der Viewport-Breite hat, nichts tun
+      if(rect.width >= vw * 0.8) {
+        table.style.transform = '';
+        table.style.transformOrigin = '';
+        return;
+      }
+      // Skaliere hoch bis max 95% Breite
+      const target = vw * 0.95;
+      if(rect.width === 0) return;
+      const scale = Math.min(1.6, target / rect.width); // harte Obergrenze um Unschärfe zu begrenzen
+      if(scale > 1.01){
+        table.style.transform = 'scale(' + scale.toFixed(3) + ')';
+        table.style.transformOrigin = 'top left';
+      } else {
+        table.style.transform = '';
+        table.style.transformOrigin = '';
+      }
+    }
+    if(window.innerWidth <= 600){
+      setTimeout(autoscaleTable, 50); // nach Rendering
+      window.addEventListener('resize', autoscaleTable);
+      window.addEventListener('orientationchange', function(){ setTimeout(autoscaleTable, 100); });
+    }
 });
 </script>
 </head>
@@ -195,7 +225,7 @@ document.addEventListener("DOMContentLoaded", function() {
       {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
-  {# Maximal 22 Gesamtspalten: 2 Basis (Season / B) + 20 Episoden-Spalten #}
+  {# Maximal 22 Gesamtspalten: 2 Basis (Season / B) + 20 Episoden-Spalten (breitere Übersicht) #}
   {% set total_max = 22 %}
   {% set episodes_per_row = total_max - 2 %}
   {% set end_index = total_max if row_data|length > total_max else row_data|length %}
@@ -216,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function() {
   {# Zusätzliche Episoden-Blöcke in 10er Schritten #}
   {% for start in range(total_max, row_data|length, episodes_per_row) %}
       {% set chunk = namespace(nonempty=false) %}
-      {% for c in range(start, start + 16) %}
+      {% for c in range(start, start + episodes_per_row) %}
         {% if c < row_data|length and row_data[c][0] not in (None, '') %}{% set chunk.nonempty = true %}{% endif %}
       {% endfor %}
       {% if chunk.nonempty %}
