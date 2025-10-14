@@ -78,7 +78,10 @@ def get_code(season, ep):
         if value is None:
             return f"Kein Eintrag für {episode_code}", 404
         if isinstance(value, list):
-            formatted = "<ul>" + "".join(f"<li>{item}</li>" for item in value) + "</ul>"
+            if len(value) == 0:
+                formatted = f"Keine wichtigen Ereignisse"
+            else:
+                formatted = "<ul>" + "".join(f"<li>{item}</li>" for item in value) + "</ul>"
         else:
             formatted = str(value)
         return formatted, 200, {"Content-Type": "text/html; charset=utf-8"}
