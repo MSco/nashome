@@ -44,6 +44,27 @@ tr.season-start td {
 </style>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  function centerPopup(el){
+    const vv = window.visualViewport;
+    const vpW = vv ? vv.width : window.innerWidth;
+    const vpH = vv ? vv.height : window.innerHeight;
+    const scrollX = vv ? vv.pageLeft : window.scrollX;
+    const scrollY = vv ? vv.pageTop : window.scrollY;
+    // sicherstellen, dass Größe berechnet werden kann
+    const rect = el.getBoundingClientRect();
+    let left = scrollX + (vpW - rect.width)/2;
+    let top = scrollY + (vpH - rect.height)/2;
+    left = Math.max(scrollX + 8, left);
+    top = Math.max(scrollY + 8, top);
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    // Falls durch Zoom außerhalb, sanft scrollen
+    const after = el.getBoundingClientRect();
+    const within = after.top >= 0 && after.left >= 0 && after.bottom <= (window.innerHeight || document.documentElement.clientHeight) && after.right <= (window.innerWidth || document.documentElement.clientWidth);
+    if(!within){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
     const popup = document.createElement("div");
     popup.id = "popup";
     popup.style.display = "none";
@@ -76,19 +97,12 @@ document.addEventListener("DOMContentLoaded", function() {
           .then(code => {
             document.getElementById("popup-content").innerHTML = code;
             popup.style.display = 'block';
-            // zentrieren
-            const vpW = window.innerWidth; const vpH = window.innerHeight;
-            const rect = popup.getBoundingClientRect();
-            popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
-            popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
+            centerPopup(popup);
           })
           .catch(err => {
             document.getElementById("popup-content").innerText = 'Fehler: '+err;
             popup.style.display = 'block';
-            const vpW = window.innerWidth; const vpH = window.innerHeight;
-            const rect = popup.getBoundingClientRect();
-            popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
-            popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
+            centerPopup(popup);
           });
         return;
       }
@@ -101,18 +115,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 .then(code => {
           document.getElementById("popup-content").innerHTML = code;
           popup.style.display = "block";
-          const vpW = window.innerWidth; const vpH = window.innerHeight;
-          const rect = popup.getBoundingClientRect();
-          popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
-          popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
+          centerPopup(popup);
                 })
                 .catch(err => {
           document.getElementById("popup-content").innerText = "Fehler: " + err;
           popup.style.display = "block";
-          const vpW = window.innerWidth; const vpH = window.innerHeight;
-          const rect = popup.getBoundingClientRect();
-          popup.style.left = `${window.scrollX + (vpW - rect.width)/2}px`;
-          popup.style.top = `${window.scrollY + (vpH - rect.height)/2}px`;
+          centerPopup(popup);
                 });
         });
     });
