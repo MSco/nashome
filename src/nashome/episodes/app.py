@@ -122,8 +122,8 @@ def get_code(season, ep):
         episode_code = revert_episode_code(season, ep)
         value = EPISODE_EVENTS.get(episode_code)
         if value is None:
-            return f"Kein Eintrag für {episode_code}", 404
-        if isinstance(value, list):
+            formatted = f"Folge nicht ausgestrahlt"
+        elif isinstance(value, list):
             if len(value) == 0:
                 formatted = f"Keine wichtigen Ereignisse"
             else:
