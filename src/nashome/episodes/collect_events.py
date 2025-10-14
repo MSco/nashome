@@ -11,7 +11,7 @@ def get_episode_links():
     soup = BeautifulSoup(r.content, "html.parser")
     
     episodes = {}
-    valid_prefixes = ["EP", "AG", "DP", "XY", "SM", "PM"]  # alle gültigen Präfixe
+    valid_prefixes = ["EP", "AG", "DP", "BW", "XY", "SM", "PM"]  # alle gültigen Präfixe
     
     # Jede Episode hat einen Link im Episoden-Div
     for a in soup.select(".episodenliste a"):
