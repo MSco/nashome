@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function() {
   <tr class="{{ row_class }}">
       {% for c in range(0,2) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
-    <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
+  <td class="{{ 'col-b' if c == 1 else '' }}{% if c != 1 %} episode-cell{% endif %}"
       style="background-color: {{ row_colors[c] }};"
       data-season="{{ season if season is not none else '' }}"
       data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
