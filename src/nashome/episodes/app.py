@@ -124,10 +124,15 @@ def get_code(season, ep):
         if value is None:
             formatted = f"Folge nicht ausgestrahlt"
         elif isinstance(value, list):
-            if len(value) == 0:
-                formatted = f"Keine wichtigen Ereignisse"
-            else:
-                formatted = "<ul>" + "".join(f"<li>{item}</li>" for item in value) + "</ul>"
+            if len(value) < 2:
+                value.append("Keine wichtigen Ereignisse")
+            # Ersten Eintrag als Überschrift verwenden, restliche als Liste
+            title = value[0]
+            remaining = value[1:]
+            list_html = ""
+            if remaining:
+                list_html = "<ul>" + "".join(f"<li>{item}</li>" for item in remaining) + "</ul>"
+            formatted = f"<h3 style=\"margin-top:0\">{title}</h3>{list_html}"
         else:
             formatted = str(value)
         return formatted, 200, {"Content-Type": "text/html; charset=utf-8"}
@@ -144,9 +149,19 @@ def get_movie(movie_key):
     if value is None:
         return f"Kein Film-Eintrag für {key}", 404
     if isinstance(value, list):
-        formatted = "<ul>" + "".join(f"<li>{item}</li>" for item in value) + "</ul>"
+        # Wenn nur ein Element: Überschrift ohne Liste
+        if len(value) == 0:
+            formatted = "<h3 style=\"margin-top:0\">(Kein Inhalt)</h3>"
+        else:
+            title = value[0]
+            remaining = value[1:]
+            list_html = ""
+            if remaining:
+                list_html = "<ul>" + "".join(f"<li>{item}</li>" for item in remaining) + "</ul>"
+            formatted = f"<h3 style=\"margin-top:0\">{title}</h3>{list_html}"
     else:
-        formatted = str(value)
+        # Einzelner String -> als Überschrift interpretieren
+        formatted = f"<h3 style=\"margin-top:0\">{value}</h3>"
     return formatted, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 if __name__ == "__main__":
