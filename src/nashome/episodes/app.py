@@ -22,13 +22,19 @@ for row in raw_data:
     first_cell = row[0]
     if first_cell:
         current_season = str(first_cell).strip()
+    # build row structure
     for col_idx, cell in enumerate(row):
         if col_idx == 0:
             new_row.append((str(cell) if cell else "", None, None))
         else:
             ep_num = cell if cell is not None else ""
             new_row.append((str(ep_num), current_season, ep_num))
-    processed_data.append(new_row)
+    # prüfen ob Zeile (ab Spalte 1) komplett leer ist
+    has_episode_content = any(
+        (t[0] not in (None, "")) for t in new_row[1:]
+    )
+    if has_episode_content:
+        processed_data.append(new_row)
 
 # Events laden
 with open(EVENTS_FILE, "r", encoding="utf-8") as f:

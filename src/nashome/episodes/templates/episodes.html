@@ -90,9 +90,15 @@ document.addEventListener("DOMContentLoaded", function() {
 <h2>Season Numbering Übersicht</h2>
 <table>
 {% for r in range(data|length) %}
-    {% set row_data = data[r] %}
-    {% set row_colors = colors[r] %}
-    <tr>
+  {% set row_data = data[r] %}
+  {% set row_colors = colors[r] %}
+  {# Zeile nur rendern wenn irgendeine Zelle ab Spalte 1 Inhalt hat #}
+  {% set ns = namespace(nonempty=false) %}
+  {% for cell_tpl in row_data[1:] %}
+    {% if cell_tpl[0] not in (None, '') %}{% set ns.nonempty = true %}{% endif %}
+  {% endfor %}
+  {% if ns.nonempty %}
+  <tr>
       {% for c in range(0,2) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
         <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
@@ -114,6 +120,11 @@ document.addEventListener("DOMContentLoaded", function() {
       {% endfor %}
     </tr>
     {% for start in range(18, row_data|length, 16) %}
+      {% set chunk = namespace(nonempty=false) %}
+      {% for c in range(start, start + 16) %}
+        {% if c < row_data|length and row_data[c][0] not in (None, '') %}{% set chunk.nonempty = true %}{% endif %}
+      {% endfor %}
+      {% if chunk.nonempty %}
       <tr>
         <td></td><td></td>
         {% for c in range(start, start + 16) %}
@@ -128,7 +139,9 @@ document.addEventListener("DOMContentLoaded", function() {
           {% endif %}
         {% endfor %}
       </tr>
+      {% endif %}
     {% endfor %}
+    {% endif %}
 {% endfor %}
 </table>
 </body>
