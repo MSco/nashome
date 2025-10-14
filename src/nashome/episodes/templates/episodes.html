@@ -22,6 +22,11 @@ td.col-b {
   white-space: nowrap;
 }
 
+/* Trennlinie vor Beginn einer neuen Staffel */
+tr.season-start td {
+  border-top: 3px solid #000;
+}
+
 /* Mobile Layout */
 @media (max-width: 600px) {
   table, thead, tbody, th, td, tr { display: block; }
@@ -92,13 +97,19 @@ document.addEventListener("DOMContentLoaded", function() {
 {% for r in range(data|length) %}
   {% set row_data = data[r] %}
   {% set row_colors = colors[r] %}
+  {% set season_name = row_data[0][0] %}
+  {% set prev_season = data[r-1][0][0] if r>0 else None %}
   {# Zeile nur rendern wenn irgendeine Zelle ab Spalte 1 Inhalt hat #}
   {% set ns = namespace(nonempty=false) %}
   {% for cell_tpl in row_data[1:] %}
     {% if cell_tpl[0] not in (None, '') %}{% set ns.nonempty = true %}{% endif %}
   {% endfor %}
   {% if ns.nonempty %}
-  <tr>
+  {% set row_class = '' %}
+  {% if season_name and season_name != prev_season %}
+    {% set row_class = 'season-start' %}
+  {% endif %}
+  <tr class="{{ row_class }}">
       {% for c in range(0,2) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
         <td class="{{ 'col-b' if c == 1 else '' }} episode-cell"
@@ -119,7 +130,7 @@ document.addEventListener("DOMContentLoaded", function() {
         </td>
       {% endfor %}
     </tr>
-    {% for start in range(18, row_data|length, 16) %}
+  {% for start in range(18, row_data|length, 16) %}
       {% set chunk = namespace(nonempty=false) %}
       {% for c in range(start, start + 16) %}
         {% if c < row_data|length and row_data[c][0] not in (None, '') %}{% set chunk.nonempty = true %}{% endif %}
@@ -140,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function() {
         {% endfor %}
       </tr>
       {% endif %}
-    {% endfor %}
+  {% endfor %}
     {% endif %}
 {% endfor %}
 </table>
