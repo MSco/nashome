@@ -22,6 +22,12 @@ td.col-b {
   white-space: nowrap;
 }
 
+/* Spalten A und B fett (nur Haupttabelle) */
+#episodes-table tr td:nth-child(1),
+#episodes-table tr td:nth-child(2) {
+  font-weight: bold;
+}
+
 /* Trennlinie vor Beginn einer neuen Staffel */
 tr.season-start td {
   border-top: 3px solid #000;
@@ -133,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </head>
 <body>
-<h2>Season Numbering Übersicht</h2>
+<h2>Wichtige Episoden</h2>
 <table id="episodes-table">
 {% for r in range(data|length) %}
   {% set row_data = data[r] %}
