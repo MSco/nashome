@@ -177,7 +177,10 @@ document.addEventListener("DOMContentLoaded", function() {
       {{ cell_value if cell_value is not none else "" }}
         </td>
       {% endfor %}
-  {% set end_index = 18 if row_data|length > 18 else row_data|length %}
+  {# Maximal 12 Gesamtspalten: 2 Basis (Season / B) + 10 Episoden-Spalten #}
+  {% set total_max = 12 %}
+  {% set episodes_per_row = total_max - 2 %}
+  {% set end_index = total_max if row_data|length > total_max else row_data|length %}
   {% if ns_info.col_count == 0 %}{% set ns_info.col_count = end_index %}{% endif %}
       {% for c in range(2, end_index) %}
         {% set cell_value, season, ep_in_season = row_data[c] %}
@@ -192,7 +195,8 @@ document.addEventListener("DOMContentLoaded", function() {
         </td>
       {% endfor %}
     </tr>
-  {% for start in range(18, row_data|length, 16) %}
+  {# Zusätzliche Episoden-Blöcke in 10er Schritten #}
+  {% for start in range(total_max, row_data|length, episodes_per_row) %}
       {% set chunk = namespace(nonempty=false) %}
       {% for c in range(start, start + 16) %}
         {% if c < row_data|length and row_data[c][0] not in (None, '') %}{% set chunk.nonempty = true %}{% endif %}
@@ -200,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
       {% if chunk.nonempty %}
       <tr>
         <td></td><td></td>
-        {% for c in range(start, start + 16) %}
+  {% for c in range(start, start + episodes_per_row) %}
           {% if c < row_data|length %}
             {% set cell_value, season, ep_in_season = row_data[c] %}
       {% set is_movie_chunk = 1 if pink_flags[r][c] else 0 %}
