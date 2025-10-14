@@ -8,17 +8,28 @@
 
 table {
   border-collapse: collapse; /* zurück zu Standard für Rahmen-Konsistenz */
-  width: 100%;
-  table-layout: auto;
+  table-layout: auto; /* Browser berechnet Breiten nach Inhalt */
 }
+
+/* Nur Episoden-Haupttabelle soll auf Inhaltsbreite schrumpfen */
+#episodes-table {
+  width: auto; /* statt 100%: so breit wie nötig */
+}
+
 td {
   border: 1px solid #999;
-  padding: 2px;
+  padding: 2px 4px;
   text-align: center;
   font-size: 11px;
 }
+
+/* Spalte B nicht mehr fest erzwingen – trotzdem kein Zeilenumbruch */
 td.col-b {
-  width: 80px;
+  white-space: nowrap;
+}
+
+/* Alle Episoden-Zellen ohne Zeilenumbruch => minimale Breite */
+#episodes-table td {
   white-space: nowrap;
 }
 
