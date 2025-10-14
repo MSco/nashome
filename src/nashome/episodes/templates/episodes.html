@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>Season Numbering Tabelle</title>
 <style>
 /* Tabelle Desktop */
@@ -59,13 +60,14 @@ tr.season-separator td {
 /* Klickbare Episoden-Zellen */
 .clickable { cursor: pointer; }
 
-/* Mobile Layout */
+/* Mobile Layout Optimierung: Seite nur so breit wie Tabelle */
 @media (max-width: 600px) {
-  table, thead, tbody, th, td, tr { display: block; }
-  tr { margin-bottom: 8px; border: 1px solid #999; border-radius: 4px; padding: 4px; }
-  td { display: flex; justify-content: space-between; padding: 4px; border: none; border-bottom: 1px solid #ddd; }
-  td:last-child { border-bottom: none; }
-  td::before { content: attr(data-label); font-weight: bold; }
+  body { margin:4px; }
+  .page-wrapper { display:inline-block; max-width:100%; }
+  /* Tabellen behalten ihr normales Layout (kein block stacken) */
+  #episodes-table, .legend-table { font-size: 11px; }
+  /* Falls horizontales Scrollen nötig, sauber kapseln */
+  .table-scroll { overflow-x:auto; }
 }
 </style>
 <script>
@@ -159,7 +161,9 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </head>
 <body>
+<div class="page-wrapper">
 <h2>Wichtige Episoden</h2>
+<div class="table-scroll">
 <table id="episodes-table">
 {# Anzahl tatsächlich dargestellter Spalten für Abschlusslinie ermitteln #}
 {% set ns_info = namespace(col_count=0) %}
@@ -240,6 +244,7 @@ document.addEventListener("DOMContentLoaded", function() {
 {# Abschluss-Doppellinie unter letzter Staffel (#Fallback 1) #}
 <tr class="season-separator"><td colspan="{{ ns_info.col_count if ns_info.col_count>0 else 1 }}"></td></tr>
 </table>
+</div>
 {% if legend and legend|length > 0 %}
 <h3>Legende</h3>
 <table class="legend-table" style="margin-top:12px; border-collapse:collapse;">
@@ -262,5 +267,6 @@ document.addEventListener("DOMContentLoaded", function() {
   {% endfor %}
 </table>
 {% endif %}
+</div>
 </body>
 </html>
