@@ -106,6 +106,12 @@ pink_flags = []
 for row_colors in processed_colors:
     pink_flags.append([is_pink(c.upper()) for c in row_colors])
 
+# Referenz: Lila aus Zelle BT2 (Column BT = 72 -> Index 71, Row 2 -> raw index 0)
+try:
+    PURPLE_REF = colors[0][71].upper()
+except Exception:
+    PURPLE_REF = None
+
 @app.route("/")
 def index():
     return render_template(
@@ -114,6 +120,7 @@ def index():
     colors=processed_colors,
         pink_flags=pink_flags,
         legend=legend_struct,
+        purple_ref=PURPLE_REF,
     )
 
 @app.route("/get_code/<int:season>/<int:ep>")
