@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, shrink-to-fit=no" />
+<title>Season Numbering Tabelle</title>
+<style>
+/* Tabelle Desktop */
+
+table {
+  border-collapse: collapse; /* zurück zu Standard für Rahmen-Konsistenz */
+  table-layout: auto; /* Browser berechnet Breiten nach Inhalt */
+}
+
+/* Nur Episoden-Haupttabelle soll auf Inhaltsbreite schrumpfen */
+#episodes-table {
+  width: auto; /* statt 100%: so breit wie nötig */
+}
+
+td {
+  border: 1px solid #999;
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 11px;
+}
+
+/* Spalte B nicht mehr fest erzwingen – trotzdem kein Zeilenumbruch */
+td.col-b {
+  white-space: nowrap;
+}
+
+/* Alle Episoden-Zellen ohne Zeilenumbruch => minimale Breite */
+#episodes-table td {
+  white-space: nowrap;
+}
+
+/* Spalten A und B fett (nur Haupttabelle) */
+#episodes-table tr td:nth-child(1),
+#episodes-table tr td:nth-child(2) {
+  font-weight: bold;
+}
+
+/* Staffel-Trenner Variante A: eigene Zwischenzeile mit Doppel-Linie */
+tr.season-separator td {
+  padding: 0;
+  line-height: 0;
+  border: none;
+  height: 6px; /* Platz für zwei Linien */
+  background:
+    linear-gradient(#000,#000) top/100% 2px no-repeat,
+    linear-gradient(#000,#000) bottom/100% 2px no-repeat;
+}
+
+/* Legend: keine Klicks + fett */
+.legend-table td { pointer-events: none; cursor: default; font-weight: bold; }
+
+/* Legenden-Tabelle gleiche maximale Breite wie Episoden-Tabelle (auto, in Zeilen gechunked) */
+.legend-table { width:auto; display:inline-table; }
+
+/* Klickbare Episoden-Zellen */
+.clickable { cursor: pointer; }
+
+/* Mobile Layout Optimierung (Option A): Browser soll nicht auf Höhe fit-zoomen */
+@media (max-width: 600px) {
+  html, body { height:auto; min-height:100%; }
+  body { margin:4px; }
+  .page-wrapper { display:inline-block; max-width:100%; }
+  /* Erstes (Staffel-)Feld darf umbrechen für etwas mehr Höhe, Episoden bleiben kompakt */
+  #episodes-table tr td:nth-child(1) { white-space:normal; text-align:left; }
+  #episodes-table tr td:nth-child(2) { white-space:nowrap; }
+  /* Horizontal scroll statt globaler Zoom */
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  /* Spacer verhindert, dass Browser komplette Höhe initial einpassen möchte */
+  .height-spacer { height:60vh; width:1px; display:block; }
+}
+  /* Grau-Schalter: Body mit Klasse 'desaturate' -> alle Tabellencolorings neutralisieren */
+  body.desaturate #episodes-table td.colored,
+  body.desaturate .legend-table td.colored {
+    filter: grayscale(1) brightness(0.92);
+    background-color: #d9d9d9 !important;
+    color: #000 !important;
+  }
+  body.desaturate #episodes-table td.movie-cell.colored {
+    outline: none;
+  }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Toggle-Schalter hinzufügen
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.id = 'color-toggle';
+  // Standard: Farben deaktiviert beim Erstaufruf
+  document.body.classList.add('desaturate');
+  toggleBtn.textContent = 'Farben an';
+  toggleBtn.style.marginBottom = '8px';
+  toggleBtn.style.padding = '4px 8px';
+  toggleBtn.style.cursor = 'pointer';
+  document.body.prepend(toggleBtn);
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('desaturate');
+    const active = document.body.classList.contains('desaturate');
+    toggleBtn.textContent = active ? 'Farben an' : 'Farben aus';
+  });
+  function centerPopup(el){
+    const vv = window.visualViewport;
+    const vpW = vv ? vv.width : window.innerWidth;
+    const vpH = vv ? vv.height : window.innerHeight;
+    const scrollX = vv ? vv.pageLeft : window.scrollX;
+    const scrollY = vv ? vv.pageTop : window.scrollY;
+    // sicherstellen, dass Größe berechnet werden kann
+    const rect = el.getBoundingClientRect();
+    let left = scrollX + (vpW - rect.width)/2;
+    let top = scrollY + (vpH - rect.height)/2;
+    left = Math.max(scrollX + 8, left);
+    top = Math.max(scrollY + 8, top);
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    // Falls durch Zoom außerhalb, sanft scrollen
+    const after = el.getBoundingClientRect();
+    const within = after.top >= 0 && after.left >= 0 && after.bottom <= (window.innerHeight || document.documentElement.clientHeight) && after.right <= (window.innerWidth || document.documentElement.clientWidth);
+    if(!within){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+    const popup = document.createElement("div");
+    popup.id = "popup";
+    popup.style.display = "none";
+    popup.style.position = "absolute";
+    popup.style.background = "#fff";
+    popup.style.border = "1px solid #999";
+    popup.style.padding = "10px";
+    popup.style.borderRadius = "8px";
+    popup.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+    popup.style.maxWidth = "300px";
+    popup.style.zIndex = "9999";
+    popup.innerHTML = `
+        <div id="popup-content"></div>
+        <button id="popup-close" style="margin-top:6px;">Schließen</button>
+    `;
+    document.body.appendChild(popup);
+    document.getElementById("popup-close").addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+  document.querySelectorAll("#episodes-table .episode-cell").forEach(cell => {
+        cell.addEventListener("click", function(event) {
+            const season = this.dataset.season;
+            const ep = this.dataset.ep;
+      const isMovie = this.dataset.movie === '1';
+      const raw = this.dataset.raw || '';
+      if (isMovie) {
+        if (!raw) return;
+        fetch(`/get_movie/${encodeURIComponent(raw)}`)
+          .then(r => { if(!r.ok) throw new Error('Serverfehler'); return r.text(); })
+          .then(code => {
+            document.getElementById("popup-content").innerHTML = code;
+            popup.style.display = 'block';
+            centerPopup(popup);
+          })
+          .catch(err => {
+            document.getElementById("popup-content").innerText = 'Fehler: '+err;
+            popup.style.display = 'block';
+            centerPopup(popup);
+          });
+        return;
+      }
+      if (!season || !ep) return;
+      fetch(`/get_code/${season}/${ep}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Serverfehler");
+                    return response.text();
+                })
+                .then(code => {
+          document.getElementById("popup-content").innerHTML = code;
+          popup.style.display = "block";
+          centerPopup(popup);
+                })
+                .catch(err => {
+          document.getElementById("popup-content").innerText = "Fehler: " + err;
+          popup.style.display = "block";
+          centerPopup(popup);
+                });
+        });
+    });
+    document.addEventListener("click", function(e) {
+        if (!popup.contains(e.target) && !e.target.classList.contains("episode-cell")) {
+            popup.style.display = "none";
+        }
+    });
+
+    // (Option C entfernt) – keine Transform-Kompensation mehr.
+});
+</script>
+</head>
+<body>
+<div class="page-wrapper">
+<h2>Wichtige Episoden</h2>
+<div class="table-scroll">
+<table id="episodes-table">
+{# Anzahl tatsächlich dargestellter Spalten für Abschlusslinie ermitteln #}
+{% set ns_info = namespace(col_count=0) %}
+{% for r in range(data|length) %}
+  {% set row_data = data[r] %}
+  {% set row_colors = colors[r] %}
+  {% set season_name = row_data[0][0] %}
+  {% set prev_season = data[r-1][0][0] if r>0 else None %}
+  {# Zeile nur rendern wenn irgendeine Zelle ab Spalte 1 Inhalt hat #}
+  {% set ns = namespace(nonempty=false) %}
+  {% for cell_tpl in row_data[1:] %}
+    {% if cell_tpl[0] not in (None, '') %}{% set ns.nonempty = true %}{% endif %}
+  {% endfor %}
+  {% if ns.nonempty %}
+  {% set row_class = '' %}
+  {% if season_name and season_name != prev_season %}
+    <tr class="season-separator"><td colspan="{{ row_data|length }}"></td></tr>
+    {% set row_class = 'season-start' %}
+  {% endif %}
+  <tr class="{{ row_class }}">
+      {% for c in range(0,2) %}
+        {% set cell_value, season, ep_in_season = row_data[c] %}
+  {% set is_colored = (row_colors[c] and (row_colors[c]|upper != purple_ref) and (row_colors[c]|lower not in ['#ffffff','white'])) %}
+  <td class="{{ 'col-b' if c == 1 else '' }}{% if c != 1 %} episode-cell{% endif %}{% if is_colored %} colored{% endif %}"
+    style="background-color: {{ row_colors[c] }};"
+      data-season="{{ season if season is not none else '' }}"
+      data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+      data-movie="0"
+      data-raw="{{ cell_value|e }}">
+      {{ cell_value if cell_value is not none else "" }}
+        </td>
+      {% endfor %}
+  {# Maximal 12 Gesamtspalten: 2 Basis (Season / B) + 10 Episoden-Spalten (breitere Übersicht) #}
+  {% set total_max = 12 %}
+  {% set episodes_per_row = total_max - 2 %}
+  {% set end_index = total_max if row_data|length > total_max else row_data|length %}
+  {% if ns_info.col_count == 0 %}{% set ns_info.col_count = end_index %}{% endif %}
+      {% for c in range(2, end_index) %}
+        {% set cell_value, season, ep_in_season = row_data[c] %}
+    {% set is_movie = 1 if pink_flags[r][c] else 0 %}
+  {% set is_colored_ep = (row_colors[c] and (row_colors[c]|upper != purple_ref) and (row_colors[c]|lower not in ['#ffffff','white'])) %}
+  <td style="background-color: {{ row_colors[c] }};"
+      data-season="{{ season if season is not none else '' }}"
+      data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+      data-movie="{{ is_movie }}"
+      data-raw="{{ cell_value|e }}"
+  class="episode-cell {{ 'movie-cell' if is_movie else '' }} {% if cell_value %}clickable{% endif %}{% if is_colored_ep %} colored{% endif %}">
+    {{ cell_value if cell_value is not none else "" }}
+        </td>
+      {% endfor %}
+    </tr>
+  {# Zusätzliche Episoden-Blöcke in 10er Schritten #}
+  {% for start in range(total_max, row_data|length, episodes_per_row) %}
+      {% set chunk = namespace(nonempty=false) %}
+      {% for c in range(start, start + episodes_per_row) %}
+        {% if c < row_data|length and row_data[c][0] not in (None, '') %}{% set chunk.nonempty = true %}{% endif %}
+      {% endfor %}
+      {% if chunk.nonempty %}
+      <tr>
+        <td></td><td></td>
+  {% for c in range(start, start + episodes_per_row) %}
+          {% if c < row_data|length %}
+            {% set cell_value, season, ep_in_season = row_data[c] %}
+      {% set is_movie_chunk = 1 if pink_flags[r][c] else 0 %}
+  {% set is_colored_chunk = (row_colors[c] and (row_colors[c]|upper != purple_ref) and (row_colors[c]|lower not in ['#ffffff','white'])) %}
+  <td style="background-color: {{ row_colors[c] }};"
+        data-season="{{ season if season is not none else '' }}"
+        data-ep="{{ ep_in_season if ep_in_season is not none else '' }}"
+        data-movie="{{ is_movie_chunk }}"
+        data-raw="{{ cell_value|e }}"
+  class="episode-cell {{ 'movie-cell' if is_movie_chunk else '' }} {% if cell_value %}clickable{% endif %}{% if is_colored_chunk %} colored{% endif %}">
+      {{ cell_value if cell_value is not none else "" }}
+            </td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endif %}
+  {% endfor %}
+    {% endif %}
+{% endfor %}
+{# Abschluss-Doppellinie unter letzter Staffel (#Fallback 1) #}
+<tr class="season-separator"><td colspan="{{ ns_info.col_count if ns_info.col_count>0 else 1 }}"></td></tr>
+</table>
+<div class="height-spacer" aria-hidden="true"></div>
+</div>
+{% if legend and legend|length > 0 %}
+<h3>Legende</h3>
+<table class="legend-table" style="margin-top:12px; border-collapse:collapse;">
+  {% for row in legend %}
+    {# Jede Legendzeile: nur Spalten A und B (Index 0 und 1) verwenden #}
+    {% set cellA = row[0] if row|length > 0 else ('', '') %}
+    {% set cellB = row[1] if row|length > 1 else ('', '') %}
+    {% set valA,colorA = cellA %}
+    {% set valB,colorB = cellB %}
+    {% if (valA not in (None, '')) or (valB not in (None, '')) %}
+    <tr>
+  {% set is_colored_leg_a = (colorA and (colorA|upper != purple_ref) and (colorA|lower not in ['#ffffff','white'])) %}
+  <td style="background-color: {{ colorA }}; padding:4px; font-size:10px; border:1px solid #666; text-align:left; white-space:nowrap;" class="{% if is_colored_leg_a %}colored{% endif %}">
+        {{ valA if valA is not none else '' }}
+      </td>
+  {% set is_colored_leg_b = (colorB and (colorB|upper != purple_ref) and (colorB|lower not in ['#ffffff','white'])) %}
+  <td style="background-color: {{ colorB }}; padding:4px; font-size:10px; border:1px solid #666; text-align:left; white-space:nowrap;" class="{% if is_colored_leg_b %}colored{% endif %}">
+        {{ valB if valB is not none else '' }}
+      </td>
+    </tr>
+    {% endif %}
+  {% endfor %}
+</table>
+{% endif %}
+</div>
+</body>
+</html>
