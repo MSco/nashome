@@ -42,8 +42,9 @@ def download_playlist(playlist_url:str, outdir:str|Path, language:str, try_all_s
     for video in playlist.videos:
         if video.video_id in stored_videos:
             continue
-        download_stream(yt=video, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, min_length=min_length)
-        stored_videos.append(video.video_id)
+        result = download_stream(yt=video, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, min_length=min_length)
+        if result:
+            stored_videos.append(video.video_id)
     print("Playlist done.")
 
 
@@ -79,10 +80,10 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, try_all_seaso
         download_audio(yt=yt, outdir=outdir, outfilename=output_filename)
         return True
 
-    download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, episode_name=episode_name, language=language)
+    result = download_audio_and_video(yt=yt, outdir=outdir, outfilename=output_filename, audio_tracks=audio_tracks, episode_name=episode_name, language=language)
 
     print(f"Stream done.")
-    return True
+    return result
 
 def download_audio(yt:str|YouTube, outdir:str|Path, outfilename:str):
     # define output directory
@@ -122,11 +123,11 @@ def download_audio_and_video(yt:YouTube, outdir:str|Path, outfilename:str, audio
             continue
         break
     else:
-        print("Specified audio track found.")
+        print("Specified audio track not found.")
         return False
 
     # Download video
     yt.streams.order_by("resolution").filter(mime_type="video/mp4").last().download(output_path=str(temporary_directory))
 
     # Merge audio and video
-    merge_audio_and_video(temporary_directory, outdir / outfilename, episode_name)
+    return merge_audio_and_video(temporary_directory, outdir / outfilename, episode_name)

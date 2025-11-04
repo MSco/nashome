@@ -41,10 +41,11 @@ def merge_audio_and_video(indir:Path, outpath:Path, episode_name:str=None):
 
     # run ffmpeg command
     print(f"Merging audio and video using {command[0]}")
-    subprocess.run(command, check=True)
+    process = subprocess.run(command, check=True)
 
     # Clean up
     shutil.rmtree(indir)
+    return process.returncode == 0
 
 def find_template(frame:cv2.typing.MatLike, template:cv2.typing.MatLike, threshold:float=0.8) -> bool:
     """
