@@ -8,7 +8,7 @@ import subprocess
 from nashome.utils.constants import TEMPLATE_START_DIRNAME, TEMPLATE_END_DIRNAME
 from nashome.utils.eit import EitContent
 
-def merge_audio_and_video(indir:Path, outpath:Path, episode_name:str=None):
+def merge_audio_and_video(indir:Path, outpath:Path, episode_name:str=None, audio_offset:float=0.0):
     # Find audio and video file
     audio_file, video_file = None, None
     for file in indir.iterdir():
@@ -25,22 +25,24 @@ def merge_audio_and_video(indir:Path, outpath:Path, episode_name:str=None):
 
     # ffmpeg.output(video_input, audio_input, str(outpath), vcodec='copy', acodec='aac', strict='experimental', language="ger", loglevel="error").run()
 
-    command = [
-        'ffmpeg',
-        '-i', video_file,
-        '-i', audio_file,
-        '-c:v', 'copy',  # Copy the video stream without re-encoding
-        '-strict', 'experimental',  # Copy the audio stream without re-encoding
-        '-map', '0:v:0',  # Select the first video stream from the first input
-        '-map', '1:a:0',  # Select the first audio stream from the second input
-        '-metadata:s:a:0', 'language=ger',  # Set the language of the audio stream,
-        '-metadata', f'title={episode_name if episode_name else ""}',  # Set the title of the output file
-        '-loglevel', 'error',  # Suppress output
-        outpath
+    command = ['ffmpeg']
+    if audio_offset and abs(audio_offset) > 1e-6:
+        command += ['-itsoffset', str(audio_offset)]
+    command += [
+        '-i', str(video_file),
+        '-i', str(audio_file),
+        '-c:v', 'copy',
+        '-strict', 'experimental',
+        '-map', '0:v:0',
+        '-map', '1:a:0',
+        '-metadata:s:a:0', 'language=ger',
+        '-metadata', f'title={episode_name if episode_name else ""}',
+        '-loglevel', 'error',
+        str(outpath)
     ]
 
     # run ffmpeg command
-    print(f"Merging audio and video using {command[0]}")
+    print(f"Merging audio and video: {' '.join(command)}")
     process = subprocess.run(command, check=True)
 
     # Clean up
