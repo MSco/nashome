@@ -41,6 +41,7 @@ fix-photos = "nashome._cmd.fix_photos:main"
 join-images = "nashome._cmd.join_images:main"
 pipeline-autocut = "nashome._cmd.pipeline_autocut:main"
 sync-savegames =  "nashome._cmd.sync_savegames:main"
+sync-audio = "nashome._cmd.sync_audio:main"
 
 [project.urls]
 homepage = "https://github.com/MSco/nashome"
