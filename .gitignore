@@ -5,3 +5,4 @@ data/test_data
 **/dist
 **/build
 **/*.pyc
+data/paw_patrol
