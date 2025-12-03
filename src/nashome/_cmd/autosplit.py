@@ -154,7 +154,7 @@ def split_video(input_file, output_dir, split_time, out1_name, out2_name):
     part1 = os.path.join(output_dir, out1_name)
     part2 = os.path.join(output_dir, out2_name)
 
-    print(f"➡️  Erstelle: {part1}")
+    print(f"Erstelle: {part1}")
     cmd1 = [
         "ffmpeg", "-y",
         "-i", input_file,
@@ -164,7 +164,7 @@ def split_video(input_file, output_dir, split_time, out1_name, out2_name):
     ]
     run_cmd(cmd1)
 
-    print(f"➡️  Erstelle: {part2}")
+    print(f"Erstelle: {part2}")
     cmd2 = [
         "ffmpeg", "-y",
         "-i", input_file,
@@ -174,7 +174,7 @@ def split_video(input_file, output_dir, split_time, out1_name, out2_name):
     ]
     run_cmd(cmd2)
 
-    print("✔️  Split erfolgreich abgeschlossen.")
+    print("Split erfolgreich abgeschlossen.")
 
 
 def main():
@@ -193,23 +193,23 @@ def main():
     window_seconds = args.search_window * 60 if args.search_window else None
 
     if not os.path.isfile(input_file):
-        print("❌ Fehler: Eingabedatei existiert nicht.")
+        print("Fehler: Eingabedatei existiert nicht.")
         sys.exit(1)
 
     os.makedirs(output_dir, exist_ok=True)
 
-    print("🔍 Berechne Ausgabedateinamen…")
+    print("Berechne Ausgabedateinamen…")
     try:
         out1_name, out2_name = derive_output_names(input_file)
     except ValueError as e:
-        print("❌", e)
+        print("Error: ", e)
         sys.exit(1)
 
-    print("🔍 Suche nach Black Frame…")
+    print("Suche nach Black Frame ...")
     black_time = find_black_frame(input_file, offset_seconds, window_seconds)
 
     if black_time is None:
-        print("⚠️ Kein Black Frame im angegebenen Bereich gefunden.")
+        print("Kein Black Frame im angegebenen Bereich gefunden.")
         # Gesamtes Video einfach kopieren
         import shutil
         out1_name, _ = derive_output_names(input_file)
@@ -219,7 +219,7 @@ def main():
         sys.exit(0)
 
 
-    print(f"✔️ Black Frame gefunden bei {black_time:.2f} Sekunden.")
+    print(f"Black Frame gefunden bei {black_time:.2f} Sekunden.")
 
     split_video(input_file, output_dir, black_time, out1_name, out2_name)
 
