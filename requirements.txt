@@ -6,3 +6,5 @@ pydub
 pytubefix
 requests
 unidecode
+pillow
+bs4
