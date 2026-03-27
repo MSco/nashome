@@ -3,24 +3,24 @@ This module contains the Language class.
 """
 
 class Language():
-    def __init__(self, long:list[str], short:list[str]):
+    def __init__(self, synonyms:list[str], code:str):
         """
         Initialize a Language object.
         """
-        self.long = list(map(str.lower, long))
-        self.short = list(map(str.lower, short))
+        self.synonyms = list(map(str.lower, synonyms))
+        self.code = code
 
     def __str__(self):
         """
-        Return the long language name.
+        Return the language code.
         """
-        return self.long + self.short
+        return self.code
 
     def __repr__(self):
         """
-        Return the long language name.
+        Return the language code.
         """
-        return self.long
+        return self.code
 
     def __eq__(self, other:str):
         """
@@ -32,4 +32,4 @@ class Language():
         """
         Check if the language name is contained in another language name.
         """
-        return other.lower() in self.long or other.lower() in self.short
+        return other.lower() in self.synonyms

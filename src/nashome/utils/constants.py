@@ -2,26 +2,22 @@ from nashome.utils.series import Series
 from nashome.youtube.language import Language
 
 LANGUAGE_LIST:list[Language] = [
-    Language(['german', 'deutsch'], ['deu', 'ger', 'de']),
-    Language(['english', 'englisch'], ['en', 'eng', 'us']),
-    Language(['italian', 'italienisch'], ['it', 'ita']),
-    Language(['spanish', 'spanisch'], ['spa', 'es']),
-    Language(['portuguese', 'portugiesisch'], ['pt', 'por']),
-    Language(['french', 'französisch'], ['fr', 'fra']),
-    Language(['russian', 'russisch'], ['ru', 'rus']),
-    Language(['chinese', 'chinesisch'], ['zh', 'chi']),
-    Language(['japanese', 'japanisch'], ['ja', 'jpn']),
-    Language(['korean', 'koreanisch'], ['ko', 'kor']), 
-    Language(['arabic', 'arabisch'], ['ar', 'ara']),
-    Language(['turkish', 'türkisch'], ['tr', 'tur']),
-    Language(['hindi'], ['hi', 'hin']),
-    Language(['bengali'], ['bn', 'ben']),
-    Language(['urdu'], ['ur', 'urd']),
-    Language(['indonesian'], ['id', 'ind']),
-    Language(['malay'], ['ms', 'may']),
-    Language(['vietnamese'], ['vi', 'vie']),
-    Language(['thai'], ['th', 'tha']),
-    Language(['swahili'], ['sw', 'swa']),
+    Language(['german', 'deutsch', 'deu', 'ger', 'de'], 'de-DE'),
+    Language(['english', 'englisch', 'en', 'eng', 'us'], 'en'),
+    Language(['italian', 'italienisch', 'it', 'ita'], 'it'),
+    Language(['spanish', 'spanisch', 'spa', 'es'], 'es-ES'),
+    Language(['portuguese', 'portugiesisch', 'pt', 'por'], 'pt-PT'),
+    Language(['french', 'französisch', 'fr', 'fra'], 'fr-FR'),
+    Language(['arabic', 'arabisch', 'ar', 'ara'], 'ar'),
+    Language(['dansk', 'dänisch', 'da', 'dan'], 'da'),
+    Language(['finnish', 'finnisch', 'fi', 'fin'], 'fi'),
+    Language(['hebrew', 'hebräisch', 'iw', 'heb'], 'iw'),
+    Language(['dutch', 'niederländisch', 'holländisch', 'nl', 'nld'], 'nl'),
+    Language(['norwegian', 'norwegisch', 'no', 'nor'], 'no'),
+    Language(['polish', 'polnisch', 'pl', 'pol'], 'pl'),
+    Language(['portuguese brazilian', 'portugiesisch brasilianisch', 'pt-BR', 'ptbr'], 'pt-BR'),
+    Language(['portuguese', 'portugiesisch', 'pt-PT', 'ptpt'], 'pt-PT'),
+    Language(['swedish', 'schwedisch', 'sv', 'swe'], 'sv-SE')
 ]
 
 # https://developer.themoviedb.org/reference/search-tv
