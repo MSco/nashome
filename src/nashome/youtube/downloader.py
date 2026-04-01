@@ -106,18 +106,27 @@ def download_stream(video_url:str, outdir:str|Path, language:str, try_all_season
         "ignoreerrors": True,
     }
 
-    with YoutubeDL(meta_opts) as ydl:
-        info = ydl.extract_info(video_url, download=False)
+    try:
+        with YoutubeDL(meta_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+    except Exception as exc:
+        print(f"Could not read metadata for {video_url}. Skipping. ({exc})")
+        return False
+
+    if not info:
+        print(f"Could not read metadata for {video_url}. Skipping.")
+        return False
 
     # check video length, skip if shorter than min_length
     duration = info.get("duration") or 0
+    title = info.get("title") or video_url
     if duration < min_length * 60:
-        print(f"Video {info['title']} is shorter than {min_length} minutes. Skipping.")
+        print(f"Video {title} is shorter than {min_length} minutes. Skipping.")
         return False
 
     # check if extra audio tracks are available
     audio_formats = [
-    f for f in info["formats"]
+    f for f in info.get("formats", [])
     if f.get("acodec") != "none"
     ]
     available_languages = {
@@ -140,7 +149,7 @@ def download_stream(video_url:str, outdir:str|Path, language:str, try_all_season
     outdir.mkdir(parents=True, exist_ok=True)
     
     # progress output
-    print(f"Downloading {"audio" if audio_only else "video"} {info.get("title")}")
+    print(f"Downloading {"audio" if audio_only else "video"} {title}")
     
     # external audio dir is only relevant if there are extra audio tracks available and we do not find the specified language in those tracks.
     if available_languages and external_audio_dir:
