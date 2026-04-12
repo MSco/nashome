@@ -8,7 +8,6 @@ Das Datum und gegebenenfalls die Uhrzeit heraus.
 '''
 from datetime import datetime
 from pathlib import Path
-import exif
 import re
 import subprocess
 
@@ -17,9 +16,9 @@ from nashome.photos.img_filename_pattern import ImageFilenamePattern
 def extract_datetime_from_filename(filename:str) -> tuple[datetime,str]:
     patterns = [
         ImageFilenamePattern(r'Screenshot_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})(.*)\.jpe?g',  True), # Screenshot_YYYY-MM-DD-HH-MM-SS_<hashcode>.jpg
-        ImageFilenamePattern(r'IMG-(\d{4})(\d{2})(\d{2})([-_]WA\d+.*)\.jpe?g', True),  # IMG-YYYYMMDD-WAXXXX.jpg
-        ImageFilenamePattern(r'IMG[-]?(\d{4})(\d{2})(\d{2})[-_]?(\d{2})(\d{2})(\d{2})(.*)\.jpe?g',  False), # IMG(-)YYYYMMDD(-_)HHMMSS.jpg
-        ImageFilenamePattern(r'(\d{4})(\d{2})(\d{2})[-_](\d{2})(\d{2})(\d{2})(.*)\.jpe?g', False)  # YYYYMMDD_HHMMSS.jpg
+        ImageFilenamePattern(r'IMG[-_](\d{4})(\d{2})(\d{2})([-_]WA\d+.*)\.jpe?g', True),  # IMG-YYYYMMDD-WAXXXX.jpg
+        ImageFilenamePattern(r'IMG[-_]?(\d{4})(\d{2})(\d{2})[-_]?(\d{2})(\d{2})(\d{2})(.*)\.jpe?g',  True), # IMG(-_)YYYYMMDD(-_)HHMMSS.jpg
+        ImageFilenamePattern(r'(\d{4})(\d{2})(\d{2})[-_](\d{2})(\d{2})(\d{2})(.*)\.jpe?g', True)  # YYYYMMDD_HHMMSS.jpg
     ]
 
     for pattern in patterns:
@@ -38,19 +37,18 @@ def extract_datetime_from_filename(filename:str) -> tuple[datetime,str]:
         
     return None, None
 
+def insert_exif_datetime(path: str|Path, date: datetime):
+    datetime_str = date.strftime("%Y:%m:%d %H:%M:%S")
+    print(f"Writing EXIF DateTimeOriginal={datetime_str} to {path}")
 
-def insert_exif_datetime(image_path:str|Path, date:datetime):
-    # create datetime string
-    datetime_str = f"{date.year:04d}:{date.month:02d}:{date.day:02d} {date.hour:02d}:{date.minute:02d}:{date.second:02d}"
-
-    # create exif data
-    img = exif.Image(image_path)
-    img["DateTimeOriginal"] = img["DateTimeDigitized"] = img["DateTime"] = datetime_str
-
-    # insert exif data into image
-    print(f"Inserting EXIF data {datetime_str} into {image_path}")
-    with open(str(image_path), 'wb') as new_image_file:
-        new_image_file.write(img.get_file())
+    subprocess.run([
+        "exiftool",
+        "-overwrite_original",
+        f"-DateTimeOriginal={datetime_str}",
+        f"-CreateDate={datetime_str}",
+        f"-ModifyDate={datetime_str}",
+        str(path),
+    ])
 
 # path = '/volume1/photo/'
 # path = '/localdata/src/python/nashome/photos'
@@ -58,7 +56,7 @@ def fix_photos(path:str|Path, disable_synology:bool):
     for root, dirnames, filenames in Path(path).walk():
         if "@" in str(root):
             continue
-        for old_filename in filenames:
+        for old_filename in sorted(filenames):
             old_path = root/old_filename
             
             # Liest das Datum und die Uhrzeit aus dem Dateinamen
@@ -66,6 +64,8 @@ def fix_photos(path:str|Path, disable_synology:bool):
             
             if date is not None:
                 insert_exif_datetime(old_path, date)
+            else:
+                print(f"No date found in filename {old_filename}")
 
             if new_filename is None:
                 continue
