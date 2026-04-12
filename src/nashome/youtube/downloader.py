@@ -68,7 +68,7 @@ def download_stream(yt:str|YouTube, outdir:str|Path, language:str, try_all_seaso
     # check if file already exists
     if (outdir/output_filename).is_file():
         print(f"File {output_filename} already exists.")
-        return False
+        return True
     
     # create output directory
     outdir.mkdir(parents=True, exist_ok=True)

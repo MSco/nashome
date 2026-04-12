@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 from PIL import Image
 import io
 
-from pyreg.iohandling.ImageObject import ImageObject
+from plio.image import ImageObject
 
 SUCCESS = 0
 ERROR = 1
