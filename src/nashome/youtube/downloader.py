@@ -39,7 +39,8 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
 
     return {
         # Prefer highest-quality separate video+audio first; only then fall back to progressive streams.
-        "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b[ext=mp4]/b",
+        # Avoid a silent downgrade to 360p by accepting progressive fallbacks only from 720p and above.
+        "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b[ext=mp4][height>=720]/b[height>=720]",
         "outtmpl": str(outpath),
         "js_runtimes": {"node": {}},
         "remote_components": {"ejs:github"},
@@ -131,6 +132,18 @@ def download_stream(video_url:str, outdir:str|Path, language:str, try_all_season
     if not info:
         print(f"Could not read metadata for {video_url}. Skipping.")
         return False
+
+    if not audio_only:
+        formats = info.get("formats", [])
+        video_heights = [f.get("height") or 0 for f in formats if f.get("vcodec") != "none"]
+        max_height = max(video_heights) if video_heights else 0
+        if max_height < 720:
+            print(
+                "Only low-resolution formats are available (<720p). "
+                "This is often caused by failed YouTube 'n' challenge solving on this host. "
+                "Ensure node is installed and yt-dlp is up to date, then retry."
+            )
+            return False
 
     # check video length, skip if shorter than min_length
     duration = info.get("duration") or 0
