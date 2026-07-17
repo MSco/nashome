@@ -10,11 +10,16 @@ from nashome.youtube.language import Language
 from nashome.utils.movie import merge_audio_and_video
 from nashome.utils.renamer import build_filename_from_title
 
+NODE_PATH = "/usr/local/bin/node"
+FFMPEG_PATH = "/bin/ffmpeg"
+
 def build_ydl_base_opts():
     return {
         "quiet": True,
         "skip_download": True,
         "extract_flat": True,
+        "js_runtimes": {"node": {"path": NODE_PATH}},  # Korrigiert
+        "remote_components": {"ejs:github"},
         "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
 
@@ -24,19 +29,16 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
     else:
         language_code = "de-DE"
 
-    NODE_PATH = "/usr/local/bin/node"
-    FFMPEG_PATH = "/bin/ffmpeg"  
-
     if audio_only:
         return {
             "format": f"ba[language={language_code}]/ba",
             "outtmpl": str(outpath),
-            "ffmpeg_location": FFMPEG_PATH, # Pfad zu ffmpeg erzwingen
+            "ffmpeg_location": FFMPEG_PATH,
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "mp3"
             }],
-            "js_runtimes": {"node": [NODE_PATH]}, # Pfad zu Node erzwingen
+            "js_runtimes": {"node": {"path": NODE_PATH}},  # Korrigiert
             "remote_components": {"ejs:github"},
             "extractor_args": {"youtube": {"player_client": ["all"]}},
         }
@@ -44,8 +46,8 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
     return {
         "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b[ext=mp4][height>=720]/b[height>=720]",
         "outtmpl": str(outpath),
-        "ffmpeg_location": FFMPEG_PATH, # Pfad zu ffmpeg erzwingen
-        "js_runtimes": {"node": [NODE_PATH]}, # Pfad zu Node erzwingen
+        "ffmpeg_location": FFMPEG_PATH,
+        "js_runtimes": {"node": {"path": NODE_PATH}},  # Korrigiert
         "remote_components": {"ejs:github"},
         "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
