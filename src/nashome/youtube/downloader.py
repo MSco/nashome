@@ -15,6 +15,7 @@ def build_ydl_base_opts():
         "quiet": True,
         "skip_download": True,
         "extract_flat": True,
+        "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
 
 def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
@@ -33,6 +34,7 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
             }],
             "js_runtimes": {"node": {}},
             "remote_components": {"ejs:github"},
+            "extractor_args": {"youtube": {"player_client": ["all"]}},
         }
 
     return {
@@ -40,6 +42,7 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
         "outtmpl": str(outpath),
         "js_runtimes": {"node": {}},
         "remote_components": {"ejs:github"},
+        "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
 
 def download_youtube(urls:list[str], outdir:Path, audio_only:bool, language:str, try_all_seasons:bool, min_length:int, external_audio_dir:Path|None, audio_offset:float):
@@ -104,6 +107,7 @@ def download_stream(video_url:str, outdir:str|Path, language:str, try_all_season
         "js_runtimes": {"node": {}},
         "remote_components": {"ejs:github"},
         "ignoreerrors": True,
+        "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
 
     try:
