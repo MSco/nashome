@@ -38,7 +38,8 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
         }
 
     return {
-        "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/b[ext=mp4]",
+        # Prefer highest-quality separate video+audio first; only then fall back to progressive streams.
+        "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b[ext=mp4]/b",
         "outtmpl": str(outpath),
         "js_runtimes": {"node": {}},
         "remote_components": {"ejs:github"},
@@ -87,14 +88,24 @@ def download_playlist(playlist_url:str, outdir:str|Path, language:str, try_all_s
         if not entry:
             continue
 
-        video_id = entry["id"]
-        if video_id in stored_videos:
+        video_id = entry.get("id")
+        video_url_raw = entry.get("webpage_url") or entry.get("url") or ""
+        if isinstance(video_url_raw, str) and video_url_raw.startswith("http"):
+            video_url = video_url_raw
+        elif video_id:
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+        elif isinstance(video_url_raw, str) and video_url_raw:
+            video_url = f"https://www.youtube.com/watch?v={video_url_raw}"
+        else:
             continue
-        video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+        stored_video_key = video_id or video_url
+        if stored_video_key in stored_videos:
+            continue
 
         result = download_stream(video_url=video_url, outdir=outdir, language=language, try_all_seasons=try_all_seasons, audio_only=audio_only, min_length=min_length, external_audio_dir=external_audio_dir, audio_offset=audio_offset)
         if result:
-            stored_videos.append(video_id)
+            stored_videos.append(stored_video_key)
     print("Playlist done.")
 
 
