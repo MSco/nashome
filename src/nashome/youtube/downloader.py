@@ -22,27 +22,30 @@ def build_ydl_download_opts(outpath: Path, audio_only: bool, language:str):
     if language in LANGUAGE_LIST:
         language_code = LANGUAGE_LIST[LANGUAGE_LIST.index(language)].code
     else:
-        language_code = "de-DE" # default to German if language not found
+        language_code = "de-DE"
+
+    NODE_PATH = "/usr/local/bin/node"
+    FFMPEG_PATH = "/bin/ffmpeg"  
 
     if audio_only:
         return {
             "format": f"ba[language={language_code}]/ba",
             "outtmpl": str(outpath),
+            "ffmpeg_location": FFMPEG_PATH, # Pfad zu ffmpeg erzwingen
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "mp3"
             }],
-            "js_runtimes": {"node": {}},
+            "js_runtimes": {"node": [NODE_PATH]}, # Pfad zu Node erzwingen
             "remote_components": {"ejs:github"},
             "extractor_args": {"youtube": {"player_client": ["all"]}},
         }
 
     return {
-        # Prefer highest-quality separate video+audio first; only then fall back to progressive streams.
-        # Avoid a silent downgrade to 360p by accepting progressive fallbacks only from 720p and above.
         "format": f"bv*[ext=mp4]+ba[ext=m4a][language={language_code}]/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b[ext=mp4][height>=720]/b[height>=720]",
         "outtmpl": str(outpath),
-        "js_runtimes": {"node": {}},
+        "ffmpeg_location": FFMPEG_PATH, # Pfad zu ffmpeg erzwingen
+        "js_runtimes": {"node": [NODE_PATH]}, # Pfad zu Node erzwingen
         "remote_components": {"ejs:github"},
         "extractor_args": {"youtube": {"player_client": ["all"]}},
     }
