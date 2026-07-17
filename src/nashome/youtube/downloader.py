@@ -242,7 +242,19 @@ def download_audio_and_video(video_url:str, outdir:str|Path, outfilename:str, au
             print("Could not derive episode key pattern from filename; aborting this stream.")
             return False
     else:
-        # Move downloaded file to final location (or merge if audio_only is False)
-        shutil.move(temporary_directory / outfilename, outdir / outfilename)
+        # Remux with title metadata and move to final location
+        import subprocess
+        src = temporary_directory / outfilename
+        dst = outdir / outfilename
+        command = [
+            'ffmpeg',
+            '-i', str(src),
+            '-c', 'copy',
+            '-metadata', f'title={episode_name if episode_name else ""}',
+            '-loglevel', 'error',
+            str(dst)
+        ]
+        print(f"Writing title metadata: {' '.join(command)}")
+        process = subprocess.run(command, check=True)
         shutil.rmtree(temporary_directory)
-        return True
+        return process.returncode == 0
