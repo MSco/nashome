@@ -13,3 +13,4 @@ pillow
 bs4
 audioop-lts
 timezonefinder
+yt-dlp
