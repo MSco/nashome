@@ -1,3 +1,4 @@
+bs4
 chardet
 exif
 ffmpeg-python
@@ -9,3 +10,5 @@ unidecode
 pillow
 bs4
 audioop-lts
+timezonefinder
+flask
