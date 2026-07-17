@@ -8,3 +8,4 @@ requests
 unidecode
 pillow
 bs4
+audioop-lts
