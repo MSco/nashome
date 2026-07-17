@@ -2,7 +2,9 @@ bs4
 chardet
 exif
 ffmpeg-python
+flask
 opencv-python-headless
+openpyxl
 pydub
 pytubefix
 requests
@@ -11,4 +13,3 @@ pillow
 bs4
 audioop-lts
 timezonefinder
-flask
