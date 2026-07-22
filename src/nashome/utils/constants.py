@@ -60,7 +60,8 @@ SERIES_LIST:list[Series] = [
     Series("Paw Patrol", 57532),
     Series("Rubble & Crew", 214875),
     Series("Bibi Blocksberg", 63361),
-    Series("Bibi und Tina", 61205)
+    Series("Bibi und Tina", 61205),
+    Series("Michel aus Lönneberga", 40903)
 ]
 
 TEMPLATE_START_DIRNAME = "start"
