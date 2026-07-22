@@ -1,10 +1,13 @@
+bs4
 chardet
 exif
 ffmpeg-python
+flask
 opencv-python-headless
+openpyxl
 pydub
 pytubefix
 requests
 unidecode
 pillow
-bs4
+timezonefinder
