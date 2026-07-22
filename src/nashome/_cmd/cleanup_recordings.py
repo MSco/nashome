@@ -13,7 +13,7 @@ from nashome.utils.renamer import cleanup_recordings
 def main():
     # argument parsing
     parser = argparse.ArgumentParser(description="Rename recordings.", formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('files', type=Path, nargs='+', help="YouTube movie/playlist url(s).")
+    parser.add_argument('files', type=str, nargs='+', help="YouTube movie/playlist url(s).")
     parser.add_argument('-s', "--series", action='store_true', help="Set this flag to rename series.")
     parser.add_argument('-t', '-tmdb', "--force-tmdb", action='store_true', help="Set this flag to force tmdb search for series.")
     parser.add_argument('-f', "--force-rename", action='store_true', help="Set this flag to force renaming files without prompt.")

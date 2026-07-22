@@ -167,7 +167,7 @@ def find_series(title:str) -> Series:
             return series
     return None
 
-def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_tmdb:bool=False, language_code:str='de-DE', try_all_seasons:bool=False) -> bool:
+def cleanup_recordings(paths:list[str], series:bool, force_tmdb:bool, force_rename:bool, dash:bool=False, no_tmdb:bool=False, language_code:str='de-DE', try_all_seasons:bool=False) -> bool:
     extensions = ('.eit', '.ts', '.meta', '.jpg', '.txt')
     remove_extensions = ('.ap', '.cuts', '.sc', 'idx2')
     
@@ -180,6 +180,7 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
         expanded_paths.extend(glob.glob(p))
 
     for path in expanded_paths:
+        path = Path(path)
         root = path.parent
         filename = path.name
         
