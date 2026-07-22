@@ -61,7 +61,8 @@ SERIES_LIST:list[Series] = [
     Series("Rubble & Crew", 214875),
     Series("Bibi Blocksberg", 63361),
     Series("Bibi und Tina", 61205),
-    Series("Michel aus Lönneberga", 40903)
+    Series("Michel aus Lönneberga", 40903),
+    Series("Meine Freundin Conni", 70272)
 ]
 
 TEMPLATE_START_DIRNAME = "start"
