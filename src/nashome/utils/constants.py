@@ -62,7 +62,8 @@ SERIES_LIST:list[Series] = [
     Series("Bibi Blocksberg", 63361),
     Series("Bibi und Tina", 61205),
     Series("Michel aus Lönneberga", 40903),
-    Series("Meine Freundin Conni", 70272)
+    Series("Meine Freundin Conni", 70272),
+    Series("Benjamin Blümchen", 62702)
 ]
 
 TEMPLATE_START_DIRNAME = "start"
