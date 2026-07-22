@@ -1,3 +1,4 @@
+import glob
 from pathlib import Path
 import re
 import requests
@@ -174,7 +175,11 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
     rename_dict:dict[Path, Path] = {}
     touch_oldname_list:list[Path] = []
     
-    for path in paths:
+    expanded_paths = []
+    for p in paths:
+        expanded_paths.extend(glob.glob(p))
+
+    for path in expanded_paths:
         root = path.parent
         filename = path.name
         
@@ -208,7 +213,7 @@ def cleanup_recordings(paths:list[Path], series:bool, force_tmdb:bool, force_ren
         print(f"delete: {remove_path}")
         
     for rename_path in rename_dict:    
-        print(f"rename: {rename_path} -> {rename_dict[rename_path]}")
+        print(f"rename: {rename_path} - {rename_dict[rename_path]}")
         
     for touch_path in touch_oldname_list: 
         txt_path = touch_path.with_suffix('.oldname.txt')
