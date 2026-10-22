@@ -86,11 +86,18 @@ GERMAN_NAMES = {
     "Zenit Saint Petersburg": "Zenit St. Petersburg",
 }
 DEFAULT_TEMPLATE = Path(__file__).resolve().parents[3] / "data" / "stadium.jpg"
-# layout as fractions of the template width and height
+# the template is cropped to this aspect ratio (width / height)
+ASPECT_RATIO = 10 / 9
+# at least this many matchup cards are placed side by side
+MIN_COLUMNS = 2
+# layout as fractions of the width and height of the cropped template
 MARGIN = 0.04
-SUBTITLE_HEIGHT = 0.045
-LOGO_HEIGHT = 0.18
-MAX_CARD_WIDTH = 0.5
+# header logos grow from LOGO_HEIGHT up to MAX_LOGO_HEIGHT if the cards leave free space
+LOGO_HEIGHT = 0.12
+MAX_LOGO_HEIGHT = 0.28
+# horizontal gap between the header logos as fraction of the logo size
+LOGO_GAP = 0.8
+MAX_CARD_WIDTH = 0.9
 # card content heights as fractions of the card width
 CARD_PAD, CARD_LOGO, CARD_GAP, CARD_NAME, CARD_KICKOFF = 0.06, 0.3, 0.045, 0.05, 0.075
 
@@ -231,6 +238,13 @@ def _draw_spaced_text(draw: ImageDraw.ImageDraw, center: tuple[float, float], te
         x += draw.textlength(c, font=font) + spacing
 
 
+def _crop_aspect(img: Image.Image, aspect: float) -> Image.Image:
+    """Crop the center of an image to the given aspect ratio (width / height)."""
+    width, height = min(img.width, round(img.height * aspect)), min(img.height, round(img.width / aspect))
+    left, top = (img.width - width) // 2, (img.height - height) // 2
+    return img.crop((left, top, left + width, top + height))
+
+
 def _darken_background(img: Image.Image) -> Image.Image:
     """Blur and darken the template, stronger at the top, so that header and cards stand out."""
     img = img.filter(ImageFilter.GaussianBlur(max(1, img.width // 1600)))
@@ -255,39 +269,50 @@ def _paste_logo(img: Image.Image, logo: Image.Image, center: tuple[int, int], si
     img.alpha_composite(logo, (x, y))
 
 
-def _draw_header(img: Image.Image, date_text: str, subtitle: str, left_logo: Image.Image, right_logo: Image.Image) -> float:
-    """Draw the logos in the top corners and date and subtitle between them and return the y coordinate below the header."""
-    top = img.height * MARGIN
-    size = int(img.height * LOGO_HEIGHT)
-    margin = img.width * MARGIN
-    for logo, x in ((left_logo, margin + size / 2), (right_logo, img.width - margin - size / 2)):
-        _paste_logo(img, logo.crop(logo.getbbox()), (int(x), int(top + size / 2)), size)
+def _subtitle_font(draw: ImageDraw.ImageDraw, text: str, size: int, max_width: float) -> ImageFont.ImageFont:
+    # letter spacing adds about a quarter of the font size per character
+    font = _font(size)
+    while font.size > 8 and draw.textlength(text, font=font) + font.size * 0.25 * len(text) > max_width:
+        font = _font(font.size - 1)
+    return font
 
+
+def _draw_date(draw: ImageDraw.ImageDraw, cx: float, y: float, date_text: str, font: ImageFont.ImageFont, render: bool) -> float:
+    """Draw the date with its visible top at y and return its visible height."""
+    bbox = draw.textbbox((cx, 0), date_text, font=font, anchor="mt")
+    if render:
+        draw.text((cx, y - bbox[1]), date_text, font=font, fill=(255, 255, 255), anchor="mt",
+                  stroke_width=max(1, font.size // 40), stroke_fill=(255, 255, 255))
+    return bbox[3] - bbox[1]
+
+
+def _draw_header(img: Image.Image, size: int, date_text: str, subtitle: str, left_logo: Image.Image, right_logo: Image.Image,
+                 render: bool = True) -> float:
+    """Draw the logos with the given size side by side at the top, date and subtitle below, and return the header height.
+
+    With render=False, nothing is drawn and only the height is computed.
+    """
     draw = ImageDraw.Draw(img)
-    cx = img.width / 2
-    max_width = img.width - 2 * (margin + size) - 2 * margin
-    text = subtitle.upper()
-    sub_font = None
-    if text:
-        # letter spacing adds about a quarter of the font size per character
-        sub_font = _font(int(img.height * SUBTITLE_HEIGHT))
-        while sub_font.size > 8 and draw.textlength(text, font=sub_font) + sub_font.size * 0.25 * len(text) > max_width:
-            sub_font = _font(sub_font.size - 1)
+    top, margin, cx = img.height * MARGIN, img.width * MARGIN, img.width / 2
+    if render:
+        gap = size * LOGO_GAP
+        for logo, x in ((left_logo, cx - gap / 2 - size / 2), (right_logo, cx + gap / 2 + size / 2)):
+            _paste_logo(img, logo.crop(logo.getbbox()), (int(x), int(top + size / 2)), size)
+        draw.line([(cx, top + size * 0.1), (cx, top + size * 0.9)], fill=(255, 255, 255), width=max(1, size // 60))
 
-    # date and subtitle as one block, vertically centered next to the logos
-    y = top + size / 2
+    y = top + size
+    max_width = img.width - 2 * margin
     if date_text:
-        date_font = _fit_font(draw, date_text, int(size * (0.75 if sub_font else 0.95)), max_width)
-        bbox = draw.textbbox((cx, 0), date_text, font=date_font, anchor="mt")
-        date_height = bbox[3] - bbox[1]
-        gap = sub_font.size * 0.6 if sub_font else 0
-        y = top + (size - date_height - gap - (sub_font.size if sub_font else 0)) / 2
-        draw.text((cx, y - bbox[1]), date_text, font=date_font, fill=(255, 255, 255), anchor="mt",
-                  stroke_width=max(1, date_font.size // 40), stroke_fill=(255, 255, 255))
-        y += date_height + gap + (sub_font.size / 2 if sub_font else 0)
-    if sub_font:
-        _draw_spaced_text(draw, (cx, y), text, sub_font, sub_font.size * 0.25, (230, 230, 235))
-    return top + size
+        y += size * 0.12
+        y += _draw_date(draw, cx, y, date_text, _fit_font(draw, date_text, int(size * 0.42), max_width), render)
+    text = subtitle.upper()
+    if text:
+        sub_font = _subtitle_font(draw, text, int(size * 0.15), max_width)
+        y += sub_font.size * 0.7
+        if render:
+            _draw_spaced_text(draw, (cx, y + sub_font.size / 2), text, sub_font, sub_font.size * 0.25, (230, 230, 235))
+        y += sub_font.size
+    return y - top
 
 
 def _card_aspect(with_kickoff: bool) -> float:
@@ -300,7 +325,7 @@ def _card_aspect(with_kickoff: bool) -> float:
 def _card_layout(n: int, w: float, h: float, gap: float, aspect: float, max_w: float) -> tuple[int, float, float]:
     """Return (columns, card width, card height) maximizing the card size for n cards in a w x h area."""
     best = (1, 0.0, 0.0)
-    for cols in range(1, n + 1):
+    for cols in range(min(n, MIN_COLUMNS), n + 1):
         rows = math.ceil(n / cols)
         card_w = min((w - gap * (cols - 1)) / cols, (h - gap * (rows - 1)) / rows * aspect, max_w)
         if card_w > best[1]:
@@ -325,15 +350,50 @@ def _draw_card(img: Image.Image, pair: list[tuple[str, Image.Image]], kickoff: s
         draw.text((x, name_y), name, font=name_font, fill=(255, 255, 255), anchor="mm")
     draw.text((x0 + cw / 2, logo_y), "VS.", font=_font(int(cw * 0.06)), fill=(255, 255, 255), anchor="mm")
     if kickoff:
+        # separator line centered between the names and the kickoff time
+        names_bottom = name_y + cw * CARD_NAME / 2
+        kickoff_top = y0 + ch - cw * (CARD_PAD + CARD_KICKOFF * 0.75)
+        line_y = (names_bottom + kickoff_top) / 2
+        draw.line([(x0 + cw * CARD_PAD, line_y), (x0 + cw * (1 - CARD_PAD), line_y)], fill=(255, 255, 255), width=max(1, int(cw / 300)))
         draw.text((x0 + cw / 2, y0 + ch - cw * CARD_PAD), f"{kickoff} Uhr", font=_font(int(cw * CARD_KICKOFF)), fill=(255, 255, 255), anchor="ms")
 
 
-def _draw_matchups(img: Image.Image, logos: list[tuple[str, Image.Image]], kickoffs: list[str], top: float) -> None:
-    margin = img.width * MARGIN
-    left, right, bottom = margin, img.width - margin, img.height - img.height * MARGIN
+def _cards_area(img: Image.Image, header_height: float) -> tuple[float, float, float, float]:
+    """Return (left, top, right, bottom) of the area below a header with the given height."""
+    margin_x, margin_y = img.width * MARGIN, img.height * MARGIN
+    return margin_x, 2 * margin_y + header_height, img.width - margin_x, img.height - margin_y
+
+
+def _layout(img: Image.Image, n_pairs: int, with_kickoff: bool, header: callable) -> tuple[int, float, tuple[int, float, float]]:
+    """Return the header logo size, the header height and the card layout (columns, card width, card height).
+
+    header(size) returns the header height for a logo size. Space the cards cannot use enlarges the header.
+    """
+    gap = img.width * 0.015
+    aspect = _card_aspect(with_kickoff)
+    max_card_width = img.height * MAX_CARD_WIDTH
+
+    def cards(header_height: float) -> tuple[tuple[int, float, float], float]:
+        left, top, right, bottom = _cards_area(img, header_height)
+        layout = _card_layout(n_pairs, right - left, bottom - top, gap, aspect, max_card_width)
+        rows = math.ceil(n_pairs / layout[0])
+        return layout, (bottom - top) - (rows * layout[2] + (rows - 1) * gap)
+
+    size = img.height * LOGO_HEIGHT
+    height = header(int(size))
+    _, free = cards(height)
+    # the header height grows about linearly with the logo size; also keep both logos within the width
+    size = int(min(size * (height + free) / height, img.height * MAX_LOGO_HEIGHT, img.width * 0.75 / (2 + LOGO_GAP)))
+    height = header(size)
+    return size, height, cards(height)[0]
+
+
+def _draw_matchups(img: Image.Image, logos: list[tuple[str, Image.Image]], kickoffs: list[str], header_height: float,
+                   layout: tuple[int, float, float]) -> None:
+    left, top, right, bottom = _cards_area(img, header_height)
     pairs = [logos[i:i + 2] for i in range(0, len(logos), 2)]
     gap = img.width * 0.015
-    cols, cw, ch = _card_layout(len(pairs), right - left, bottom - top, gap, _card_aspect(bool(kickoffs)), img.width * MAX_CARD_WIDTH)
+    cols, cw, ch = layout
     rows = math.ceil(len(pairs) / cols)
     # center the grid vertically in the available area
     grid_top = top + (bottom - top - rows * ch - (rows - 1) * gap) / 2
@@ -387,9 +447,15 @@ def create_stadium(clubs: list[str], output: Path, template: Path, date_text: st
         print(f"Error: could not download {DAZN_LOGO_URL if dazn_logo is None else competition_url}")
         return ERROR
 
-    img = _darken_background(Image.open(template).convert("RGBA"))
-    header_bottom = _draw_header(img, date_text, subtitle, dazn_logo, _whiten_dark(competition_logo))
-    _draw_matchups(img, logos, kickoffs, header_bottom + img.height * MARGIN)
+    img = _darken_background(_crop_aspect(Image.open(template).convert("RGBA"), ASPECT_RATIO))
+    competition_logo = _whiten_dark(competition_logo)
+
+    def header(size: int, render: bool = False) -> float:
+        return _draw_header(img, size, date_text, subtitle, dazn_logo, competition_logo, render)
+
+    header_size, header_height, layout = _layout(img, len(logos) // 2, bool(kickoffs), header)
+    header(header_size, render=True)
+    _draw_matchups(img, logos, kickoffs, header_height, layout)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.suffix.lower() in (".jpg", ".jpeg"):
