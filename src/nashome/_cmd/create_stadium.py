@@ -108,7 +108,7 @@ def main() -> int:
                                                  "Crests are taken from https://www.footylogos.com", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('clubs', type=str, nargs='+', help="Club names (even number). Consecutive clubs are paired, e.g. 'Bayern München' 'Borussia Dortmund'")
     parser.add_argument('-o', '--output', type=Path, default=Path("stadium.png"), help="Output image file (default: stadium.png)")
-    parser.add_argument('-s', '--subtitle', type=str, default="Alle Spiele. Live. Auf DAZN.", help="Subtitle shown at the top between the logos (default: '%(default)s', '' for none)")
+    parser.add_argument('-s', '--subtitle', type=str, default="Live auf DAZN!", help="Subtitle shown at the top between the logos (default: '%(default)s', '' for none)")
     parser.add_argument('-d', '--date', type=str, default="", help="Optional date shown above the subtitle, e.g. 25.10.")
     parser.add_argument('-k', '--kickoff', type=str, nargs='+', default=[], help="Kickoff times, either one for all matchups or one per matchup, e.g. 15:30 17:30")
     parser.add_argument('-cl', '--champions-league', action='store_true', help="Show the Champions League logo instead of the Bundesliga logo")
@@ -333,7 +333,8 @@ def _card_layout(n: int, w: float, h: float, gap: float, aspect: float, max_w: f
     return best
 
 
-def _draw_card(img: Image.Image, pair: list[tuple[str, Image.Image]], kickoff: str | None, x0: float, y0: float, cw: float, ch: float) -> None:
+def _draw_card(img: Image.Image, pair: list[tuple[str, Image.Image]], kickoff: str | None, x0: float, y0: float, cw: float, ch: float,
+               name_font: ImageFont.ImageFont) -> None:
     card = Image.new("RGBA", img.size, (0, 0, 0, 0))
     ImageDraw.Draw(card).rounded_rectangle([x0, y0, x0 + cw, y0 + ch], radius=cw * 0.04, fill=(10, 12, 25, 150),
                                            outline=(255, 255, 255, 110), width=max(1, int(cw / 250)))
@@ -346,7 +347,6 @@ def _draw_card(img: Image.Image, pair: list[tuple[str, Image.Image]], kickoff: s
     for (name, logo), x in zip(pair, (x0 + cw * 0.25, x0 + cw * 0.75)):
         _paste_logo(img, logo, (int(x), int(logo_y)), logo_size)
         name = name.upper()
-        name_font = _fit_font(draw, name, int(cw * CARD_NAME), cw * 0.44)
         draw.text((x, name_y), name, font=name_font, fill=(255, 255, 255), anchor="mm")
     draw.text((x0 + cw / 2, logo_y), "VS.", font=_font(int(cw * 0.06)), fill=(255, 255, 255), anchor="mm")
     if kickoff:
@@ -394,6 +394,9 @@ def _draw_matchups(img: Image.Image, logos: list[tuple[str, Image.Image]], kicko
     pairs = [logos[i:i + 2] for i in range(0, len(logos), 2)]
     gap = img.width * 0.015
     cols, cw, ch = layout
+    # same font size for all club names: the largest one in which every name fits
+    draw = ImageDraw.Draw(img)
+    name_font = min((_fit_font(draw, name.upper(), int(cw * CARD_NAME), cw * 0.44) for name, _ in logos), key=lambda font: font.size)
     rows = math.ceil(len(pairs) / cols)
     # center the grid vertically in the available area
     grid_top = top + (bottom - top - rows * ch - (rows - 1) * gap) / 2
@@ -405,7 +408,7 @@ def _draw_matchups(img: Image.Image, logos: list[tuple[str, Image.Image]], kicko
         row_width = cols_in_row * cw + (cols_in_row - 1) * gap
         x0 = (left + right - row_width) / 2 + col * (cw + gap)
         y0 = grid_top + row * (ch + gap)
-        _draw_card(img, pair, kickoffs[idx] if kickoffs else None, x0, y0, cw, ch)
+        _draw_card(img, pair, kickoffs[idx] if kickoffs else None, x0, y0, cw, ch, name_font)
 
 
 def create_stadium(clubs: list[str], output: Path, template: Path, date_text: str, subtitle: str, kickoffs: list[str],
