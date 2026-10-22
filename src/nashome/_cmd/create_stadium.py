@@ -101,7 +101,7 @@ def main() -> int:
                                                  "Crests are taken from https://www.footylogos.com", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('clubs', type=str, nargs='+', help="Club names (even number). Consecutive clubs are paired, e.g. 'Bayern München' 'Borussia Dortmund'")
     parser.add_argument('-o', '--output', type=Path, default=Path("stadium.png"), help="Output image file (default: stadium.png)")
-    parser.add_argument('-s', '--subtitle', type=str, default="Alle Spiele! Live!", help="Subtitle shown at the top between the logos (default: 'Alle Spiele. Live!', '' for none)")
+    parser.add_argument('-s', '--subtitle', type=str, default="Alle Spiele. Live. Auf DAZN.", help="Subtitle shown at the top between the logos (default: 'Alle Spiele. Live!', '' for none)")
     parser.add_argument('-k', '--kickoff', type=str, nargs='+', default=[], help="Kickoff times, either one for all matchups or one per matchup, e.g. 15:30 17:30")
     parser.add_argument('-cl', '--champions-league', action='store_true', help="Show the Champions League logo instead of the Bundesliga logo")
     parser.add_argument('-t', '--template', type=Path, default=DEFAULT_TEMPLATE, help=f"Stadium background image (default: {DEFAULT_TEMPLATE})")
