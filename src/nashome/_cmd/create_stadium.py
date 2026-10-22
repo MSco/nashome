@@ -101,7 +101,8 @@ def main() -> int:
                                                  "Crests are taken from https://www.footylogos.com", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('clubs', type=str, nargs='+', help="Club names (even number). Consecutive clubs are paired, e.g. 'Bayern München' 'Borussia Dortmund'")
     parser.add_argument('-o', '--output', type=Path, default=Path("stadium.png"), help="Output image file (default: stadium.png)")
-    parser.add_argument('-s', '--subtitle', type=str, default="Alle Spiele. Live. Auf DAZN.", help="Subtitle shown at the top between the logos (default: 'Alle Spiele. Live!', '' for none)")
+    parser.add_argument('-s', '--subtitle', type=str, default="Alle Spiele. Live. Auf DAZN.", help="Subtitle shown at the top between the logos (default: '%(default)s', '' for none)")
+    parser.add_argument('-d', '--date', type=str, default="", help="Optional date shown above the subtitle, e.g. 25.10.")
     parser.add_argument('-k', '--kickoff', type=str, nargs='+', default=[], help="Kickoff times, either one for all matchups or one per matchup, e.g. 15:30 17:30")
     parser.add_argument('-cl', '--champions-league', action='store_true', help="Show the Champions League logo instead of the Bundesliga logo")
     parser.add_argument('-t', '--template', type=Path, default=DEFAULT_TEMPLATE, help=f"Stadium background image (default: {DEFAULT_TEMPLATE})")
@@ -113,7 +114,7 @@ def main() -> int:
         parser.error(f"expected 1 or {len(args.clubs) // 2} kickoff times, got {len(args.kickoff)}")
 
     kickoffs = args.kickoff * (len(args.clubs) // 2) if len(args.kickoff) == 1 else args.kickoff
-    return create_stadium(args.clubs, args.output, args.template, args.subtitle, kickoffs, args.champions_league)
+    return create_stadium(args.clubs, args.output, args.template, args.date, args.subtitle, kickoffs, args.champions_league)
 
 
 def _build_session() -> requests.Session:
@@ -254,23 +255,38 @@ def _paste_logo(img: Image.Image, logo: Image.Image, center: tuple[int, int], si
     img.alpha_composite(logo, (x, y))
 
 
-def _draw_header(img: Image.Image, subtitle: str, left_logo: Image.Image, right_logo: Image.Image) -> float:
-    """Draw the logos in the top corners and the subtitle between them and return the y coordinate below the header."""
+def _draw_header(img: Image.Image, date_text: str, subtitle: str, left_logo: Image.Image, right_logo: Image.Image) -> float:
+    """Draw the logos in the top corners and date and subtitle between them and return the y coordinate below the header."""
     top = img.height * MARGIN
     size = int(img.height * LOGO_HEIGHT)
     margin = img.width * MARGIN
     for logo, x in ((left_logo, margin + size / 2), (right_logo, img.width - margin - size / 2)):
         _paste_logo(img, logo.crop(logo.getbbox()), (int(x), int(top + size / 2)), size)
 
-    if subtitle:
-        draw = ImageDraw.Draw(img)
-        text = subtitle.upper()
+    draw = ImageDraw.Draw(img)
+    cx = img.width / 2
+    max_width = img.width - 2 * (margin + size) - 2 * margin
+    text = subtitle.upper()
+    sub_font = None
+    if text:
         # letter spacing adds about a quarter of the font size per character
-        max_width = img.width - 2 * (margin + size) - 2 * margin
         sub_font = _font(int(img.height * SUBTITLE_HEIGHT))
         while sub_font.size > 8 and draw.textlength(text, font=sub_font) + sub_font.size * 0.25 * len(text) > max_width:
             sub_font = _font(sub_font.size - 1)
-        _draw_spaced_text(draw, (img.width / 2, top + size / 2), text, sub_font, sub_font.size * 0.25, (230, 230, 235))
+
+    # date and subtitle as one block, vertically centered next to the logos
+    y = top + size / 2
+    if date_text:
+        date_font = _fit_font(draw, date_text, int(size * (0.75 if sub_font else 0.95)), max_width)
+        bbox = draw.textbbox((cx, 0), date_text, font=date_font, anchor="mt")
+        date_height = bbox[3] - bbox[1]
+        gap = sub_font.size * 0.6 if sub_font else 0
+        y = top + (size - date_height - gap - (sub_font.size if sub_font else 0)) / 2
+        draw.text((cx, y - bbox[1]), date_text, font=date_font, fill=(255, 255, 255), anchor="mt",
+                  stroke_width=max(1, date_font.size // 40), stroke_fill=(255, 255, 255))
+        y += date_height + gap + (sub_font.size / 2 if sub_font else 0)
+    if sub_font:
+        _draw_spaced_text(draw, (cx, y), text, sub_font, sub_font.size * 0.25, (230, 230, 235))
     return top + size
 
 
@@ -332,7 +348,7 @@ def _draw_matchups(img: Image.Image, logos: list[tuple[str, Image.Image]], kicko
         _draw_card(img, pair, kickoffs[idx] if kickoffs else None, x0, y0, cw, ch)
 
 
-def create_stadium(clubs: list[str], output: Path, template: Path, subtitle: str, kickoffs: list[str],
+def create_stadium(clubs: list[str], output: Path, template: Path, date_text: str, subtitle: str, kickoffs: list[str],
                    champions_league: bool) -> int:
     if not template.is_file():
         print(f"Error: template {template} not found")
@@ -372,7 +388,7 @@ def create_stadium(clubs: list[str], output: Path, template: Path, subtitle: str
         return ERROR
 
     img = _darken_background(Image.open(template).convert("RGBA"))
-    header_bottom = _draw_header(img, subtitle, dazn_logo, _whiten_dark(competition_logo))
+    header_bottom = _draw_header(img, date_text, subtitle, dazn_logo, _whiten_dark(competition_logo))
     _draw_matchups(img, logos, kickoffs, header_bottom + img.height * MARGIN)
 
     output.parent.mkdir(parents=True, exist_ok=True)
